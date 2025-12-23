@@ -291,6 +291,8 @@ h1 {
     width: 3rem;
     height: 3rem;
     font-size: 1.5rem;
+    flex: none;
+    /* Prevent shrinking */
   }
 
   .row {
@@ -303,6 +305,11 @@ h1 {
 
   .key {
     height: 42px;
+  }
+
+  #keyboard {
+    flex-shrink: 0;
+    /* Prevent keyboard squash */
   }
 }
 
