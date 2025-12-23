@@ -1,5 +1,9 @@
-/* Use Clear Sans for Wordle-like typography */
-body, h1, .key, .tile, .toast {
+/* Use Clear Sans for typography */
+body,
+h1,
+.key,
+.tile,
+.toast {
   font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
   color: #121213;
 }
@@ -12,12 +16,14 @@ body {
   flex-direction: column;
   align-items: center;
 }
+
 h1 {
   margin: 1rem 0;
   font-weight: 700;
   font-size: 1.75rem;
   letter-spacing: 0.2em;
 }
+
 #toast-container {
   position: absolute;
   top: 10px;
@@ -28,6 +34,7 @@ h1 {
   pointer-events: none;
   z-index: 100;
 }
+
 .toast {
   background-color: #878a8c;
   color: #ffffff;
@@ -40,6 +47,7 @@ h1 {
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
 }
+
 .toast.show {
   opacity: 1;
 }
@@ -52,10 +60,12 @@ h1 {
   gap: 0.5rem;
   perspective: 1000px;
 }
+
 .row {
   display: flex;
   gap: 0.5rem;
 }
+
 .tile {
   flex: 1;
   aspect-ratio: 1;
@@ -72,80 +82,137 @@ h1 {
   transform-style: preserve-3d;
   transform-origin: bottom;
 }
+
 @keyframes flip {
-  0% { transform: rotateX(0deg); }
-  50% { transform: rotateX(90deg); }
-  100% { transform: rotateX(0deg); }
+  0% {
+    transform: rotateX(0deg);
+  }
+
+  50% {
+    transform: rotateX(90deg);
+  }
+
+  100% {
+    transform: rotateX(0deg);
+  }
 }
+
 .flip {
   animation: flip 0.6s ease-in-out forwards;
 }
+
+/* Vibrant Game States - Blue/Pink Theme */
 .correct {
-  background-color: #6aaa64 !important;
-  border-color: #6aaa64 !important;
-  box-shadow: 0px 2px 0px #538d4e !important;
+  background-color: #3b82f6 !important;
+  /* Bright Blue */
+  border-color: #3b82f6 !important;
+  box-shadow: 0px 2px 0px #2563eb !important;
   color: #ffffff !important;
 }
+
 .present {
-  background-color: #c9b458 !important;
-  border-color: #c9b458 !important;
-  box-shadow: 0px 2px 0px #b59f3b !important;
+  background-color: #ec4899 !important;
+  /* Vivid Pink */
+  border-color: #ec4899 !important;
+  box-shadow: 0px 2px 0px #db2777 !important;
   color: #ffffff !important;
 }
+
 .absent {
-  background-color: #787c7e !important;
-  border-color: #787c7e !important;
-  box-shadow: 0px 2px 0px #3a3a3c !important;
+  background-color: #64748b !important;
+  /* Slate */
+  border-color: #64748b !important;
+  box-shadow: 0px 2px 0px #475569 !important;
   color: #ffffff !important;
 }
+
 #keyboard {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin: 1rem 0;
+  gap: 8px;
+  /* Increased gap for better touch separation */
+  margin: 2rem 0;
+  width: 100%;
+  max-width: 500px;
+  /* Limit width for cleaner desktop view */
+  padding: 0 8px;
+  box-sizing: border-box;
 }
+
 .key-row {
   display: flex;
-  gap: 0.25rem;
+  gap: 6px;
+  justify-content: center;
+  width: 100%;
 }
+
 .key {
   flex: 1;
-  height: 2.5rem;
+  height: 58px;
+  /* Taller target */
   border: none;
-  border-radius: 4px;
-  background-color: #d3d6da;
-  font-weight: 700;
-  font-size: clamp(0.75rem, 4vw, 1rem);
+  border-radius: 8px;
+  /* More rounded */
+  background-color: #e2e8f0;
+  /* Slate-200 */
+  color: #1e293b;
+  /* Slate-800 */
+  font-weight: 600;
+  font-size: 1.1rem;
   text-transform: uppercase;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   user-select: none;
-  box-shadow: 0px 3px 0px #d3d6da;
+  box-shadow: 0 4px 0 #cbd5e1;
+  /* Soft 3D shadow */
+  transition: all 0.1s ease-in-out;
+  -webkit-tap-highlight-color: transparent;
 }
+
 .key.action {
   flex: 1.5;
+  font-size: 0.85rem;
+  background-color: #cbd5e1;
+  /* Slate-300 */
+  box-shadow: 0 4px 0 #94a3b8;
+  /* Slate-400 */
 }
-.key.correct {
-  background-color: #6aaa64 !important;
-  box-shadow: 0px 3px 0px #538d4e !important;
-  color: #ffffff !important;
-}
-.key.present {
-  background-color: #c9b458 !important;
-  box-shadow: 0px 3px 0px #b59f3b !important;
-  color: #ffffff !important;
-}
-.key.absent {
-  background-color: #787c7e !important;
-  box-shadow: 0px 3px 0px #3a3a3c !important;
-  color: #ffffff !important;
-}
+
 .key:active {
-  transform: translateY(2px);
-  box-shadow: 0px 1px 0px #00000020;
+  transform: translateY(4px);
+  box-shadow: none !important;
+  background-color: #cbd5e1;
 }
+
+/* Vibrant Game States for Keys - Blue/Pink */
+.key.correct {
+  background-color: #3b82f6 !important;
+  /* Bright Blue */
+  border-color: #3b82f6 !important;
+  box-shadow: 0 4px 0 #2563eb !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.key.present {
+  background-color: #ec4899 !important;
+  /* Vivid Pink */
+  border-color: #ec4899 !important;
+  box-shadow: 0 4px 0 #db2777 !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.key.absent {
+  background-color: #64748b !important;
+  /* Slate */
+  border-color: #64748b !important;
+  box-shadow: 0 4px 0 #475569 !important;
+  color: #ffffff !important;
+}
+
 .logo {
   width: 100%;
   max-width: 360px;
