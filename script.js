@@ -66,6 +66,7 @@ function startGame() {
 
 function onKey(e) {
   const key = e.key.toUpperCase();
+  if (navigator.vibrate) navigator.vibrate(50);
   if (currentRow >= 6) return;
   if (key === 'ENTER') return checkGuess();
   if (key === 'BACKSPACE') return deleteLetter();
