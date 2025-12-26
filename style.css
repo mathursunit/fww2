@@ -67,12 +67,16 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
+  /* Ensure everything starts from top */
   height: 100vh;
   /* Fallback */
   height: 100dvh;
   /* Dynamic constrained height for mobile */
   overflow: hidden;
   /* Prevent scrolling if possible */
+  padding-top: 10px;
+  /* Consistent top gap on desktop */
   padding-bottom: env(safe-area-inset-bottom);
   touch-action: manipulation;
 }
@@ -174,20 +178,21 @@ input:checked+.slider:before {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  flex: 1;
+  justify-content: flex-start;
+  gap: 5px;
+  /* Minimal gap */
+  flex: none;
+  /* Don't stretch on desktop */
   width: 100%;
   max-width: 500px;
   overflow-y: auto;
-  /* Allow internal scrolling if absolutely needed */
+  padding-top: 5px;
+  /* Minimal top padding */
+  /* Consistent top margin */
 }
 
 h1 {
   margin: 1rem 0;
-  font-weight: 700;
-  font-size: 1.75rem;
-  letter-spacing: 0.2em;
 }
 
 #toast-container {
@@ -223,17 +228,17 @@ h1 {
 #grid {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 6px;
+  /* Reduced gap */
   perspective: 1000px;
   flex-shrink: 0;
-  /* Prevent grid collapse */
 }
 
 .row {
   display: flex;
-  gap: 0.5rem;
+  gap: 6px;
+  /* Reduced gap */
   flex-shrink: 0;
-  /* Prevent row collapse */
 }
 
 .tile {
@@ -253,12 +258,11 @@ h1 {
   transform-origin: bottom;
   user-select: none;
   transition: transform 0.1s, background-color 0.2s;
-  /* Global Safety to prevent collapse */
-  min-width: 3rem;
-  min-height: 3rem;
-  max-width: 3.5rem;
-  /* Cap size on desktop too for aesthetics */
-  max-height: 3.5rem;
+  /* Global Safety to prevent collapse - Optimized for mobile height */
+  min-width: 2.2rem;
+  min-height: 2.2rem;
+  max-width: 3.2rem;
+  max-height: 3.2rem;
   flex: none;
   /* Don't grow/shrink wildly */
 }
@@ -440,11 +444,9 @@ h1 {
 
 .key {
   flex: 1;
-  height: 48px;
-  /* Reduced height to fit screen */
+  height: 46px;
+  /* Shorter for vertical space */
   border: none;
-  border-radius: 6px;
-  /* Slightly tighter radius */
   background-color: var(--color-key-bg);
   color: var(--color-key-text);
   font-weight: 600;
@@ -510,12 +512,14 @@ h1 {
 .mode-btn {
   border: none;
   background: transparent;
-  padding: 4px 16px;
+  padding: 4px 10px;
+  /* Even tighter */
   border-radius: 16px;
   font-weight: 700;
   cursor: pointer;
   color: var(--color-mode-btn-text);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  /* Even smaller */
   transition: all 0.2s ease;
 }
 
@@ -542,21 +546,21 @@ h1 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  /* Compact */
-  margin-bottom: 10px;
-  /* Reduced */
-  padding: 5px;
+  gap: 2px;
+  /* Ultra compact */
+  margin-bottom: 5px;
+  padding: 5px 2px;
 }
 
 .header-controls {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: 3px;
+  /* Minimal gap to prevent wrapping */
   width: 100%;
-  flex-wrap: wrap;
-  /* Allow wrapping on small phones */
+  flex-wrap: nowrap !important;
+  /* STRICT NO WRAP */
 }
 
 .logo-main {
@@ -698,11 +702,12 @@ h1 {
 #help-btn {
   background: none;
   border: none;
-  font-size: 1.2rem;
-  /* Even smaller to fit */
+  font-size: 1.1rem;
+  /* Smaller to fit single row */
   cursor: pointer;
   z-index: 100;
-  padding: 5px;
+  padding: 3px;
+  /* Minimal padding */
   border-radius: 50%;
   background-color: var(--color-header-btn);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -710,6 +715,7 @@ h1 {
   align-items: center;
   justify-content: center;
   transition: transform 0.1s ease;
+  flex-shrink: 0;
 }
 
 #theme-btn:active,
