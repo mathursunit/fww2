@@ -78,11 +78,15 @@ h1 {
   flex-direction: column;
   gap: 0.5rem;
   perspective: 1000px;
+  flex-shrink: 0;
+  /* Prevent grid collapse */
 }
 
 .row {
   display: flex;
   gap: 0.5rem;
+  flex-shrink: 0;
+  /* Prevent row collapse */
 }
 
 .tile {
@@ -100,6 +104,15 @@ h1 {
   text-transform: uppercase;
   transform-style: preserve-3d;
   transform-origin: bottom;
+
+  /* Global Safety to prevent collapse */
+  min-width: 3rem;
+  min-height: 3rem;
+  max-width: 3.5rem;
+  /* Cap size on desktop too for aesthetics */
+  max-height: 3.5rem;
+  flex: none;
+  /* Don't grow/shrink wildly */
 }
 
 @keyframes flip {
@@ -291,15 +304,10 @@ h1 {
   }
 
   .tile {
+    /* Mobile specific adjustments if needed, but global safety now prevails */
     width: 3rem;
     height: 3rem;
-    min-width: 3rem;
-    /* Strict enforcement */
-    min-height: 3rem;
-    max-width: 3rem;
-    max-height: 3rem;
     font-size: 1.5rem;
-    flex: none;
   }
 
   .row {
