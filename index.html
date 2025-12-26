@@ -51,87 +51,77 @@
         <button id="theme-btn" title="Toggle Theme">🌙</button>
         <button id="settings-btn" title="Settings">⚙️</button>
         <button id="hint-btn" title="Use Hint (Once per game)">💡</button>
+        <button id="help-btn" title="How to Play">❓</button>
       </div>
 
-      <div id="color-legend">
-        <div class="legend-item">
-          <div class="legend-dot correct"></div>Correct
-        </div>
-        <div class="legend-item">
-          <div class="legend-dot present"></div>Present
-        </div>
-        <div class="legend-item">
-          <div class="legend-dot absent"></div>Absent
-        </div>
-      </div>
     </div>
+  </div>
 
-    <div id="grid">
-      <div class="row">
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-      </div>
-      <div class="row">
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-      </div>
-      <div class="row">
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-      </div>
-      <div class="row">
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-      </div>
-      <div class="row">
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-      </div>
-      <div class="row">
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-        <div class="tile"></div>
-      </div>
+  <div id="grid">
+    <div class="row">
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
     </div>
-
-    <div id="keyboard">
-      <div class="key-row">
-        <button class="key">Q</button><button class="key">W</button><button class="key">E</button><button
-          class="key">R</button><button class="key">T</button><button class="key">Y</button><button
-          class="key">U</button><button class="key">I</button><button class="key">O</button><button
-          class="key">P</button>
-      </div>
-      <div class="key-row">
-        <button class="key">A</button><button class="key">S</button><button class="key">D</button><button
-          class="key">F</button><button class="key">G</button><button class="key">H</button><button
-          class="key">J</button><button class="key">K</button><button class="key">L</button>
-      </div>
-      <div class="key-row">
-        <button class="key action" data-key="ENTER">Enter</button><button class="key">Z</button><button
-          class="key">X</button><button class="key">C</button><button class="key">V</button><button
-          class="key">B</button><button class="key">N</button><button class="key">M</button><button class="key action"
-          data-key="BACKSPACE">⌫</button>
-      </div>
+    <div class="row">
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
     </div>
+    <div class="row">
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+    </div>
+    <div class="row">
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+    </div>
+    <div class="row">
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+    </div>
+    <div class="row">
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+    </div>
+  </div>
 
-    <div id="countdown">Next word in 00:00:00</div>
+  <div id="keyboard">
+    <div class="key-row">
+      <button class="key">Q</button><button class="key">W</button><button class="key">E</button><button
+        class="key">R</button><button class="key">T</button><button class="key">Y</button><button
+        class="key">U</button><button class="key">I</button><button class="key">O</button><button class="key">P</button>
+    </div>
+    <div class="key-row">
+      <button class="key">A</button><button class="key">S</button><button class="key">D</button><button
+        class="key">F</button><button class="key">G</button><button class="key">H</button><button
+        class="key">J</button><button class="key">K</button><button class="key">L</button>
+    </div>
+    <div class="key-row">
+      <button class="key action" data-key="ENTER">Enter</button><button class="key">Z</button><button
+        class="key">X</button><button class="key">C</button><button class="key">V</button><button
+        class="key">B</button><button class="key">N</button><button class="key">M</button><button class="key action"
+        data-key="BACKSPACE">⌫</button>
+    </div>
+  </div>
+
+  <div id="countdown">Next word in 00:00:00</div>
   </div>
 
   <!-- Stats Modal -->
@@ -237,7 +227,51 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <!-- Help Modal -->
+  <div class="modal-overlay" id="help-modal">
+    <div class="modal-content help-modal-content">
+      <button class="close-btn">&times;</button>
+      <div class="stats-header">How to Play</div>
+      <p>Guess the word in 6 tries.</p>
+
+      <div class="help-section">
+        <div class="help-example">
+          <div class="tile correct">W</div>
+          <div class="tile">E</div>
+          <div class="tile">A</div>
+          <div class="tile">R</div>
+          <div class="tile">Y</div>
+        </div>
+        <p><strong>W</strong> is in the word and in the correct spot.</p>
+      </div>
+
+      <div class="help-section">
+        <div class="help-example">
+          <div class="tile">P</div>
+          <div class="tile present">I</div>
+          <div class="tile">L</div>
+          <div class="tile">O</div>
+          <div class="tile">T</div>
+        </div>
+        <p><strong>I</strong> is in the word but in the wrong spot.</p>
+      </div>
+
+      <div class="help-section">
+        <div class="help-example">
+          <div class="tile">V</div>
+          <div class="tile">A</div>
+          <div class="tile">G</div>
+          <div class="tile absent">U</div>
+          <div class="tile">E</div>
+        </div>
+        <p><strong>U</strong> is not in the word in any spot.</p>
+      </div>
+
+      <p class="help-footer">Puzzles reset daily. Use the Archive (📅) to play past games.</p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="script.js"></script>
   <div id="version-badge"></div>
   <script src="version.js"></script>

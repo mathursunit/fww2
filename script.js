@@ -633,6 +633,21 @@ if (hintBtn) {
   hintBtn.addEventListener('click', useHint);
 }
 
+// Help Button Listener
+const helpBtn = document.getElementById('help-btn');
+const helpModal = document.getElementById('help-modal');
+if (helpBtn && helpModal) {
+  helpBtn.addEventListener('click', () => {
+    helpModal.classList.add('open');
+  });
+  helpModal.querySelector('.close-btn').addEventListener('click', () => {
+    helpModal.classList.remove('open');
+  });
+  helpModal.addEventListener('click', (e) => {
+    if (e.target === helpModal) helpModal.classList.remove('open');
+  });
+}
+
 // Stats UI (One time)
 const statsBtn = document.getElementById('stats-btn');
 const modal = document.getElementById('stats-modal');

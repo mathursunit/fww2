@@ -395,28 +395,40 @@ h1 {
   box-sizing: border-box;
 }
 
-/* Color Legend */
-#color-legend {
+/* Help Modal Styles */
+.help-modal-content {
+  text-align: left;
+}
+
+.help-modal-content p {
+  margin: 10px 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.help-section {
+  border-bottom: 1px solid var(--color-tile-border);
+  padding: 15px 0;
+}
+
+.help-example {
   display: flex;
-  gap: 1.5rem;
-  justify-content: center;
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 700;
-  text-transform: uppercase;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.help-example .tile {
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+  min-width: unset;
+  min-height: unset;
+}
+
+.help-footer {
+  font-weight: 600;
+  font-size: 0.85rem !important;
   color: var(--color-subtext);
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.legend-dot {
-  width: 1.25rem;
-  height: 1.25rem;
-  border-radius: 4px;
 }
 
 .key-row {
@@ -530,9 +542,11 @@ h1 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 20px;
-  padding: 10px;
+  gap: 8px;
+  /* Compact */
+  margin-bottom: 10px;
+  /* Reduced */
+  padding: 5px;
 }
 
 .header-controls {
@@ -548,7 +562,8 @@ h1 {
 .logo-main {
   display: flex;
   align-items: center;
-  font-size: 2.5rem;
+  font-size: 1.8rem;
+  /* Smaller logo */
   font-weight: 700;
   line-height: 1;
 }
@@ -572,10 +587,12 @@ h1 {
 }
 
 .logo-sub {
-  font-size: 0.9rem;
+  font-size: 0.75rem;
+  /* Smaller */
   color: var(--color-subtext);
   font-weight: 600;
-  margin-top: -2px;
+  margin-top: -10px;
+  /* Tighter */
 }
 
 .game-date {
@@ -677,14 +694,15 @@ h1 {
 #settings-btn,
 #archive-btn,
 #stats-btn,
-#hint-btn {
+#hint-btn,
+#help-btn {
   background: none;
   border: none;
-  font-size: 1.3rem;
-  /* Slightly smaller to fit more */
+  font-size: 1.2rem;
+  /* Even smaller to fit */
   cursor: pointer;
   z-index: 100;
-  padding: 6px;
+  padding: 5px;
   border-radius: 50%;
   background-color: var(--color-header-btn);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -698,7 +716,8 @@ h1 {
 #settings-btn:active,
 #archive-btn:active,
 #stats-btn:active,
-#hint-btn:active {
+#hint-btn:active,
+#help-btn:active {
   transform: scale(0.9);
 }
 
