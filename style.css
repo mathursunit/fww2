@@ -118,10 +118,10 @@ h1,
 
 /* Seasonal Themes */
 body.holiday-christmas {
-  --color-correct: #d42426;
-  /* Christmas Red */
-  --color-present: #2e7d32;
-  /* Christmas Green */
+  --color-correct: #2e7d32;
+  /* Christmas Green for Correct */
+  --color-present: #d42426;
+  /* Christmas Red for Present */
 }
 
 body.holiday-newyear {
