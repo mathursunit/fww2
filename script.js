@@ -151,6 +151,7 @@ async function loadSecureWords(mode) {
 let currentWordLength = 5;
 let currentRow = 0, currentCol = 0;
 let gameStatus = 'IN_PROGRESS'; // 'IN_PROGRESS', 'WON', 'LOST'
+let isSubmitting = false; // Guard for animations
 const rows = [];
 
 // Initialize
@@ -397,6 +398,7 @@ function startGame() {
   currentRow = 0;
   currentCol = 0;
   gameStatus = 'IN_PROGRESS';
+  isSubmitting = false;
   rows.length = 0;
 
   // Word of the day based on local date
@@ -621,6 +623,10 @@ function onKey(e) {
 
 function addLetter(letter) {
   if (rows[currentRow] && rows[currentRow][currentCol]) {
+    // Clear invalid state if user types again
+    if (currentCol === 0 || rows[currentRow][0].classList.contains('invalid')) {
+      rows[currentRow].forEach(tile => tile.classList.remove('invalid', 'shake'));
+    }
     rows[currentRow][currentCol].textContent = letter;
     currentCol++;
   }
@@ -630,9 +636,7 @@ function deleteLetter() {
   if (currentCol > 0) {
     // Clear invalid state if present
     const row = rows[currentRow];
-    if (row[0].classList.contains('invalid')) {
-      row.forEach(tile => tile.classList.remove('invalid'));
-    }
+    row.forEach(tile => tile.classList.remove('invalid', 'shake'));
 
     currentCol--;
     rows[currentRow][currentCol].textContent = '';
@@ -645,6 +649,8 @@ function findKeyBtn(ch) {
 
 
 function checkGuess() {
+  if (isSubmitting || gameStatus !== 'IN_PROGRESS') return;
+
   const guess = rows[currentRow].map(t => t.textContent).join('');
   if (guess.length < currentWordLength) {
     showToast('Not enough letters');
@@ -658,6 +664,8 @@ function checkGuess() {
     showToast('Not in word list');
     return;
   }
+
+  isSubmitting = true;
 
   // Use helper to calculate states
   const states = evaluateGuess(guess);
@@ -720,7 +728,8 @@ function checkGuess() {
       }
       saveGame();
     }
-  }, currentWordLength * 350 + 200);
+    isSubmitting = false;
+  }, currentWordLength * 400 + 400); // Increased buffer to ensure all flips finish
 }
 
 
