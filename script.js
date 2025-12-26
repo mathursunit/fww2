@@ -17,32 +17,41 @@ const STATS_KEY_BASE = 'fww_stats';
 let logoTapCount = 0;
 let logoTapTimer = null;
 
+// Load words for a specific mode
+async function loadWords(mode) {
+  if (WORDS_DATA[mode].length > 0) return WORDS_DATA[mode];
+  try {
+    const response = await fetch(`words${mode}.txt`);
+    const text = await response.text();
+    WORDS_DATA[mode] = text.split('\n').map(w => w.trim().toUpperCase()).filter(Boolean);
+    return WORDS_DATA[mode];
+  } catch (err) {
+    console.error(`Failed to load words${mode}.txt:`, err);
+    return [];
+  }
+}
+
 // Initialize
-Promise.all([
-  fetch('words4.txt').then(r => r.text()),
-  fetch('words5.txt').then(r => r.text()),
-  fetch('words6.txt').then(r => r.text())
-]).then(([txt4, txt5, txt6]) => {
-  WORDS_DATA[4] = txt4.split('\n').map(w => w.trim().toUpperCase()).filter(Boolean);
-  WORDS_DATA[5] = txt5.split('\n').map(w => w.trim().toUpperCase()).filter(Boolean);
-  WORDS_DATA[6] = txt6.split('\n').map(w => w.trim().toUpperCase()).filter(Boolean);
-
-  // Initialize mode buttons
-  setupModeButtons();
-
+(async function init() {
   // Start with default or saved mode
   const savedMode = localStorage.getItem('fww_last_mode');
   if (savedMode && ['4', '5', '6'].includes(savedMode)) {
     currentWordLength = parseInt(savedMode);
   }
 
+  // Initialize mode buttons
+  setupModeButtons();
+
   // Update UI to reflect saved mode initial state
   document.querySelectorAll('.mode-btn').forEach(b => {
     b.classList.toggle('active', parseInt(b.dataset.mode) === currentWordLength);
   });
 
+  // Load only the current required words
+  await loadWords(currentWordLength);
+
   startGame();
-});
+})();
 
 function getStatsKey() {
   return `${STATS_KEY_BASE}_${currentWordLength}`;
@@ -63,7 +72,7 @@ function setupModeButtons() {
   });
 }
 
-function switchMode(mode) {
+async function switchMode(mode) {
   currentWordLength = mode;
   localStorage.setItem('fww_last_mode', mode);
 
@@ -71,6 +80,10 @@ function switchMode(mode) {
   document.querySelectorAll('.mode-btn').forEach(b => {
     b.classList.toggle('active', parseInt(b.dataset.mode) === mode);
   });
+
+  // Ensure words for new mode are loaded
+  await loadWords(mode);
+
   // Restart game
   startGame();
 }
