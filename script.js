@@ -4,7 +4,7 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const EPOCH_MS = Date.UTC(2025, 0, 1);
 
 let currentWordLength = 5;
-const WORDS_DATA = { 5: [], 6: [] };
+const WORDS_DATA = { 4: [], 5: [], 6: [] };
 let WORDS = []; // Active list alias
 let solution = '';
 let currentRow = 0, currentCol = 0;
@@ -19,9 +19,11 @@ let logoTapTimer = null;
 
 // Initialize
 Promise.all([
+  fetch('words4.txt').then(r => r.text()),
   fetch('words5.txt').then(r => r.text()),
   fetch('words6.txt').then(r => r.text())
-]).then(([txt5, txt6]) => {
+]).then(([txt4, txt5, txt6]) => {
+  WORDS_DATA[4] = txt4.split('\n').map(w => w.trim().toUpperCase()).filter(Boolean);
   WORDS_DATA[5] = txt5.split('\n').map(w => w.trim().toUpperCase()).filter(Boolean);
   WORDS_DATA[6] = txt6.split('\n').map(w => w.trim().toUpperCase()).filter(Boolean);
 
@@ -30,7 +32,7 @@ Promise.all([
 
   // Start with default or saved mode
   const savedMode = localStorage.getItem('fww_last_mode');
-  if (savedMode && (savedMode === '5' || savedMode === '6')) {
+  if (savedMode && ['4', '5', '6'].includes(savedMode)) {
     currentWordLength = parseInt(savedMode);
   }
 

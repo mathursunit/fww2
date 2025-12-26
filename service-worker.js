@@ -1,10 +1,11 @@
 
-const CACHE_NAME = 'fun-with-words-cache-v3';
+const CACHE_NAME = 'fun-with-words-cache-v4';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './script.js',
+  './words4.txt',
   './words5.txt',
   './words6.txt',
   './manifest.json'
