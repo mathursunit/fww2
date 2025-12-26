@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'fun-with-words-cache-v6';
+const CACHE_NAME = 'fun-with-words-cache-v8';
 const ASSETS = [
   './',
   './index.html',

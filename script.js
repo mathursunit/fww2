@@ -24,14 +24,15 @@ const settings = {
 const SoundEngine = {
   ctx: null,
   init() {
-    if (!this.ctx) {
-      try {
-        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-      } catch (e) {
-        console.warn('AudioContext not supported');
-      }
+    if (this.ctx && this.ctx.state !== 'closed') {
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      return;
     }
-    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+      console.warn('AudioContext not supported');
+    }
   },
   playThump() {
     if (!settings.sound || !this.ctx) return;
@@ -443,13 +444,16 @@ function startGame() {
   // I'll move listener setup to the bottom IIFE or global scope, similar to mode buttons.
 
   loadGame(dailyIndex);
-  SoundEngine.init();
 }
 
 // One-time Setup for Input
-window.addEventListener('keydown', onKey);
+window.addEventListener('keydown', (e) => {
+  SoundEngine.init(); // Initialize on first keypress
+  onKey(e);
+});
 document.querySelectorAll('#keyboard .key').forEach(btn => {
   btn.addEventListener('click', () => {
+    SoundEngine.init(); // Initialize on first click
     const k = btn.dataset.key || btn.textContent;
     onKey({ key: k });
   });
@@ -530,6 +534,7 @@ function loadGame(currentDayIndex) {
 
     // Restore Guesses
     state.guesses.forEach((guess) => {
+      if (guess.length !== currentWordLength) return;
       // Set letters
       guess.split('').forEach((letter, i) => {
         if (rows[currentRow] && rows[currentRow][i]) {
@@ -640,12 +645,13 @@ function findKeyBtn(ch) {
 
 
 function checkGuess() {
-  if (currentCol < currentWordLength) {
+  const guess = rows[currentRow].map(t => t.textContent).join('');
+  if (guess.length < currentWordLength) {
     showToast('Not enough letters');
-    HapticEngine.vibrate([50, 50, 50]);
+    HapticEngine.vibrate([40, 40, 40]);
     return;
   }
-  const guess = rows[currentRow].map(t => t.textContent).join('');
+
   if (!WORDS_HASHES.has(hash32(guess))) {
     rows[currentRow].forEach(tile => tile.classList.add('invalid', 'shake'));
     HapticEngine.vibrate([100, 50, 100]);
