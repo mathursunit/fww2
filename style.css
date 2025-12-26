@@ -281,7 +281,8 @@ h1 {
   /* Ensure on top */
 }
 
-@media (max-height: 700px) {
+@media (max-width: 600px),
+(max-height: 700px) {
   .logo {
     max-width: 180px;
     /* Reduced further */
