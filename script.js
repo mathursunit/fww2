@@ -759,9 +759,6 @@ function loadGame(currentDayIndex) {
     if (gameStatus === 'WON' || gameStatus === 'LOST') {
       if (gameStatus === 'WON') {
         currentRow = 6; // Lock input
-        showToast('Great');
-      } else if (gameStatus === 'LOST') {
-        showToast(`The word was ${solution} `);
       }
     }
 
