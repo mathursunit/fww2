@@ -28,7 +28,17 @@ Promise.all([
   // Initialize mode buttons
   setupModeButtons();
 
-  // Start with default or saved mode? Default 5 for now.
+  // Start with default or saved mode
+  const savedMode = localStorage.getItem('fww_last_mode');
+  if (savedMode && (savedMode === '5' || savedMode === '6')) {
+    currentWordLength = parseInt(savedMode);
+  }
+
+  // Update UI to reflect saved mode initial state
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.mode) === currentWordLength);
+  });
+
   startGame();
 });
 
@@ -53,6 +63,8 @@ function setupModeButtons() {
 
 function switchMode(mode) {
   currentWordLength = mode;
+  localStorage.setItem('fww_last_mode', mode);
+
   // Update UI
   document.querySelectorAll('.mode-btn').forEach(b => {
     b.classList.toggle('active', parseInt(b.dataset.mode) === mode);
