@@ -1,12 +1,12 @@
 
-const CACHE_NAME = 'fun-with-words-cache-v1';
+const CACHE_NAME = 'fun-with-words-cache-v3';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './script.js',
-  './words.txt',
-  './logo.png',
+  './words5.txt',
+  './words6.txt',
   './manifest.json'
 ];
 
@@ -29,7 +29,7 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(cached => 
+    caches.match(event.request).then(cached =>
       cached || fetch(event.request)
     )
   );
