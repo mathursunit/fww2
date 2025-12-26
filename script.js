@@ -149,9 +149,11 @@ async function loadSecureWords(mode) {
 }
 
 let currentWordLength = 5;
+let activeDayIndex = getDailyIndex();
 let currentRow = 0, currentCol = 0;
 let gameStatus = 'IN_PROGRESS'; // 'IN_PROGRESS', 'WON', 'LOST'
 let isSubmitting = false; // Guard for animations
+let hintsUsed = false;
 const rows = [];
 
 // Initialize
@@ -181,8 +183,9 @@ function getStatsKey() {
   return `${STATS_KEY_BASE}_${currentWordLength}`;
 }
 
-function getGameStateKey() {
-  return `${GAME_STATE_KEY_BASE}_${currentWordLength}`;
+function getGameStateKey(dayIdx = activeDayIndex) {
+  // Use a day-specific key to support Archive
+  return `${GAME_STATE_KEY_BASE}_${currentWordLength}_d${dayIdx}`;
 }
 
 function setupModeButtons() {
@@ -292,6 +295,105 @@ function setupSettings() {
   });
 }
 
+// Hint System
+function useHint() {
+  if (gameStatus !== 'IN_PROGRESS' || isSubmitting || hintsUsed) return;
+
+  const hintBtn = document.getElementById('hint-btn');
+
+  // Find a position that isn't solved in any previous row
+  let hintPos = -1;
+  const solvedIndices = new Set();
+
+  // Check rows already played
+  for (let r = 0; r < currentRow; r++) {
+    rows[r].forEach((tile, i) => {
+      if (tile.classList.contains('correct')) solvedIndices.add(i);
+    });
+  }
+
+  // Find first unsolved index
+  for (let i = 0; i < currentWordLength; i++) {
+    if (!solvedIndices.has(i)) {
+      hintPos = i;
+      break;
+    }
+  }
+
+  if (hintPos === -1) {
+    showToast("You've already solved all letters!");
+    return;
+  }
+
+  hintsUsed = true;
+  if (hintBtn) hintBtn.classList.add('disabled');
+
+  const letter = solution[hintPos];
+  showToast(`Hint: The letter at pos ${hintPos + 1} is ${letter}`);
+
+  // Auto-fill in current row
+  rows[currentRow][hintPos].textContent = letter;
+  rows[currentRow][hintPos].classList.add('hinted');
+  HapticEngine.vibrate(50);
+  SoundEngine.playDing();
+
+  // Update keyboard if not already known
+  const key = findKeyBtn(letter);
+  if (key && !key.classList.contains('correct')) {
+    key.classList.add('present'); // Mark as known
+  }
+
+  saveGame();
+}
+
+// Archive Logic
+function openArchive() {
+  const modal = document.getElementById('archive-modal');
+  const list = document.getElementById('archive-list');
+  list.innerHTML = '';
+
+  const today = getDailyIndex();
+  // Show last 14 days
+  for (let i = 0; i < 14; i++) {
+    const day = today - i;
+    const date = new Date(EPOCH_MS + day * MS_PER_DAY);
+    const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+
+    const savedState = localStorage.getItem(getGameStateKey(day));
+    let statusText = 'Not Played';
+    let isPlayed = false;
+
+    if (savedState) {
+      try {
+        const state = JSON.parse(savedState);
+        statusText = state.gameStatus === 'WON' ? 'Solved' : (state.gameStatus === 'LOST' ? 'Failed' : 'In Progress');
+        isPlayed = (state.gameStatus === 'WON' || state.gameStatus === 'LOST');
+      } catch (e) { }
+    }
+
+    const item = document.createElement('div');
+    item.className = 'archive-item';
+    item.innerHTML = `
+      <div class="setting-label">
+        <div class="archive-date">${dateStr}${day === today ? ' (Today)' : ''}</div>
+        <div class="archive-status">${statusText}</div>
+      </div>
+      <button class="archive-play-btn ${isPlayed ? 'played' : ''}" data-day="${day}">
+        ${day === today ? 'Play' : 'Replay'}
+      </button>
+    `;
+
+    item.querySelector('button').addEventListener('click', () => {
+      startGame(day);
+      modal.classList.remove('open');
+    });
+
+    list.appendChild(item);
+  }
+
+  modal.classList.add('open');
+}
+
 function getStats() {
   const defaultStats = {
     played: 0,
@@ -393,17 +495,28 @@ function showStatsModal(mode = currentWordLength) {
   }
 }
 
-function startGame() {
+function startGame(dayIdx = null) {
+  // Use current day if none provided
+  if (dayIdx !== null) {
+    activeDayIndex = dayIdx;
+  } else {
+    activeDayIndex = getDailyIndex();
+  }
+
   // Reset active variables
   currentRow = 0;
   currentCol = 0;
   gameStatus = 'IN_PROGRESS';
   isSubmitting = false;
+  hintsUsed = false;
   rows.length = 0;
 
+  // Update Hint UI
+  const hintBtn = document.getElementById('hint-btn');
+  if (hintBtn) hintBtn.classList.remove('disabled');
+
   // Word of the day based on local date
-  const dailyIndex = getDailyIndex();
-  const solutionIndex = ((dailyIndex % WORDS_SOLUTIONS.length) + WORDS_SOLUTIONS.length) % WORDS_SOLUTIONS.length;
+  const solutionIndex = ((activeDayIndex % WORDS_SOLUTIONS.length) + WORDS_SOLUTIONS.length) % WORDS_SOLUTIONS.length;
   solution = WORDS_SOLUTIONS[solutionIndex];
 
   // Rebuild Grid
@@ -437,15 +550,7 @@ function startGame() {
 
   document.body.focus();
 
-  // Keyboard events (remove old listeners to avoid duplicates? actually listeners on window/keys stack if not careful)
-  // Best to only add them ONCE. But startGame is called on switchMode.
-  // I should move listener setup outside or check if added. 
-  // Easy way: clone node or use a flag. 
-  // Actually, 'onKey' handles the logic. The listeners are cheap. 
-  // But adding multiple click listeners to keys IS bad. They will fire multiple times.
-  // I'll move listener setup to the bottom IIFE or global scope, similar to mode buttons.
-
-  loadGame(dailyIndex);
+  loadGame(activeDayIndex);
 }
 
 // One-time Setup for Input
@@ -484,6 +589,18 @@ if (logo) {
   });
 }
 
+// Archive Button Listener
+const archiveBtn = document.getElementById('archive-btn');
+if (archiveBtn) {
+  archiveBtn.addEventListener('click', openArchive);
+}
+
+// Hint Button Listener
+const hintBtn = document.getElementById('hint-btn');
+if (hintBtn) {
+  hintBtn.addEventListener('click', useHint);
+}
+
 // Stats UI (One time)
 const statsBtn = document.getElementById('stats-btn');
 const modal = document.getElementById('stats-modal');
@@ -514,9 +631,10 @@ function saveGame() {
     .filter(word => word.length === currentWordLength); // Only complete guesses
 
   const state = {
-    dayIndex: getDailyIndex(),
+    dayIndex: activeDayIndex,
     guesses: guesses,
-    gameStatus: gameStatus
+    gameStatus: gameStatus,
+    hintsUsed: hintsUsed
   };
   localStorage.setItem(getGameStateKey(), JSON.stringify(state));
 }
@@ -555,6 +673,11 @@ function loadGame(currentDayIndex) {
     });
 
     gameStatus = state.gameStatus;
+    hintsUsed = !!state.hintsUsed;
+
+    const hintBtn = document.getElementById('hint-btn');
+    if (hintsUsed && hintBtn) hintBtn.classList.add('disabled');
+
     if (gameStatus === 'WON' || gameStatus === 'LOST') {
       if (gameStatus === 'WON') {
         currentRow = 6; // Lock input

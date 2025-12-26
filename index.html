@@ -40,14 +40,16 @@
       </div>
 
       <div class="header-controls">
-        <button id="stats-btn">📊</button>
+        <button id="stats-btn" title="Statistics">📊</button>
+        <button id="archive-btn" title="Archive">📅</button>
         <div class="mode-selector">
           <button class="mode-btn" data-mode="4">4</button>
           <button class="mode-btn active" data-mode="5">5</button>
           <button class="mode-btn" data-mode="6">6</button>
         </div>
-        <button id="theme-btn">🌙</button>
-        <button id="settings-btn">⚙️</button>
+        <button id="theme-btn" title="Toggle Theme">🌙</button>
+        <button id="settings-btn" title="Settings">⚙️</button>
+        <button id="hint-btn" title="Use Hint (Once per game)">💡</button>
       </div>
 
       <div id="color-legend">
@@ -179,6 +181,17 @@
       <p id="disclaimer"><strong>Disclaimer: This is a fun project to learn coding and has no commercial value. All
           rights
           are with the amazing NYTimes only.</strong></p>
+    </div>
+  </div>
+
+  <!-- Archive Modal -->
+  <div class="modal-overlay" id="archive-modal">
+    <div class="modal-content">
+      <button class="close-btn">&times;</button>
+      <div class="stats-header">Puzzle Archive</div>
+      <div id="archive-list" class="archive-list">
+        <!-- populated by js -->
+      </div>
     </div>
   </div>
 

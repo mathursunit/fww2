@@ -251,7 +251,8 @@ h1 {
   text-transform: uppercase;
   transform-style: preserve-3d;
   transform-origin: bottom;
-
+  user-select: none;
+  transition: transform 0.1s, background-color 0.2s;
   /* Global Safety to prevent collapse */
   min-width: 3rem;
   min-height: 3rem;
@@ -260,6 +261,27 @@ h1 {
   max-height: 3.5rem;
   flex: none;
   /* Don't grow/shrink wildly */
+}
+
+.tile.hinted {
+  border-color: #ffd700 !important;
+  /* Gold border */
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.4) !important;
+  animation: pulse-hint 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-hint {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 @keyframes flip {
@@ -503,21 +525,24 @@ h1 {
 }
 
 .game-header {
-  position: relative;
+  width: 100%;
+  max-width: 500px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  flex-shrink: 0;
-  width: 100%;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 10px;
 }
 
 .header-controls {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 1rem;
+  align-items: center;
+  gap: 8px;
   width: 100%;
+  flex-wrap: wrap;
+  /* Allow wrapping on small phones */
 }
 
 .logo-main {
@@ -637,51 +662,90 @@ h1 {
   z-index: 100;
 }
 
-/* Stats Button */
-#stats-btn {
+#theme-btn,
+#settings-btn,
+#archive-btn,
+#stats-btn,
+#hint-btn {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
+  /* Slightly smaller to fit more */
   cursor: pointer;
   z-index: 100;
-  padding: 5px;
+  padding: 6px;
   border-radius: 50%;
   background-color: var(--color-header-btn);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.1s ease;
 }
 
-#theme-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  z-index: 100;
-  padding: 5px;
-  border-radius: 50%;
-  background-color: var(--color-header-btn);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+#theme-btn:active,
+#settings-btn:active,
+#archive-btn:active,
+#stats-btn:active,
+#hint-btn:active {
+  transform: scale(0.9);
 }
 
-#settings-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  z-index: 100;
-  padding: 5px;
-  border-radius: 50%;
-  background-color: var(--color-header-btn);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+#hint-btn.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  filter: grayscale(1);
 }
+
+/* Archive List */
+.archive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px 5px;
+}
+
+.archive-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background-color: var(--color-mode-bg);
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.archive-item:hover {
+  background-color: var(--color-key-bg);
+}
+
+.archive-date {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.archive-status {
+  font-size: 0.8rem;
+  color: var(--color-subtext);
+}
+
+.archive-play-btn {
+  background-color: var(--color-correct);
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.archive-play-btn.played {
+  background-color: var(--color-absent);
+}
+
 
 /* Modal Overlay */
 .modal-overlay {
