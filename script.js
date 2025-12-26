@@ -317,16 +317,18 @@ if (logo) {
     logoTapCount++;
     clearTimeout(logoTapTimer);
 
-    if (logoTapCount >= 5) {
-      // Reset Game
-      localStorage.removeItem(getGameStateKey());
-      showToast('Game Reset!');
+    if (logoTapCount >= 7) {
+      // Reset All Games
+      localStorage.removeItem('fww_gamestate_4');
+      localStorage.removeItem('fww_gamestate_5');
+      localStorage.removeItem('fww_gamestate_6');
+      showToast('All Games Reset!');
       setTimeout(() => window.location.reload(), 1000);
       logoTapCount = 0;
     } else {
       logoTapTimer = setTimeout(() => {
         logoTapCount = 0;
-      }, 1000);
+      }, 2000); // 2 seconds between taps allowed
     }
   });
 }
