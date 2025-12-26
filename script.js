@@ -469,11 +469,15 @@ function checkGuess() {
         showStatsModal();
         document.getElementById('stats-modal').classList.add('open');
       }, 1500);
-      if (typeof confetti === 'function') confetti({
-        particleCount: 200,
-        spread: 60,
-        origin: { y: 0.6 }
-      });
+      if (typeof confetti === 'function') {
+        const kb = document.getElementById('keyboard');
+        const yPos = kb ? kb.getBoundingClientRect().top / window.innerHeight : 0.7;
+        confetti({
+          particleCount: 200,
+          spread: 80,
+          origin: { y: Math.max(0, Math.min(1, yPos - 0.05)) } // Slightly above keyboard
+        });
+      }
       currentRow = 6;
     } else {
       currentRow++;
