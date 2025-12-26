@@ -391,6 +391,11 @@ function openArchive() {
     list.appendChild(item);
   }
 
+  // Handle outside click and close button FOR ONE TIME setup or here
+  const closeBtn = modal.querySelector('.close-btn');
+  closeBtn.onclick = () => modal.classList.remove('open');
+  modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('open'); };
+
   modal.classList.add('open');
 }
 
@@ -418,7 +423,7 @@ function getStatsForMode(mode) {
     guesses: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, fail: 0 }
   };
   try {
-    const s = localStorage.getItem(`${STATS_KEY_BASE}_${mode}`);
+    const s = localStorage.getItem(`${STATS_KEY_BASE}_${mode} `);
     return s ? { ...defaultStats, ...JSON.parse(s) } : defaultStats;
   } catch {
     return defaultStats;
@@ -484,7 +489,7 @@ function showStatsModal(mode = currentWordLength) {
     if (mode === currentWordLength && gameStatus === 'WON' && currentRow + 1 === i) {
       bar.classList.add('highlight');
     }
-    bar.style.width = `${widthPct}%`;
+    bar.style.width = `${widthPct}% `;
     bar.textContent = count;
     if (count > 0) bar.style.paddingLeft = '5px';
 
@@ -574,11 +579,13 @@ if (logo) {
     clearTimeout(logoTapTimer);
 
     if (logoTapCount >= 7) {
-      // Reset All Games
-      localStorage.removeItem('fww_gamestate_4');
-      localStorage.removeItem('fww_gamestate_5');
-      localStorage.removeItem('fww_gamestate_6');
-      showToast('All Games Reset!');
+      // Reset All Games (All days, all modes)
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('fww_gamestate')) {
+          localStorage.removeItem(key);
+        }
+      });
+      showToast('All Games & Hints Reset!');
       setTimeout(() => window.location.reload(), 1000);
       logoTapCount = 0;
     } else {
@@ -683,7 +690,7 @@ function loadGame(currentDayIndex) {
         currentRow = 6; // Lock input
         showToast('Great');
       } else if (gameStatus === 'LOST') {
-        showToast(`The word was ${solution}`);
+        showToast(`The word was ${solution} `);
       }
     }
 
@@ -842,7 +849,7 @@ function checkGuess() {
       currentCol = 0;
       if (currentRow === 6) {
         gameStatus = 'LOST';
-        showToast(`The word was ${solution}`);
+        showToast(`The word was ${solution} `);
         updateStats(false, 6);
         setTimeout(() => {
           showStatsModal();
@@ -870,7 +877,7 @@ function checkGuess() {
     const hours = String(Math.floor(diff / 3600000)).padStart(2, '0');
     const minutes = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
     const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-    countdownEl.innerText = `Next word in ${hours}:${minutes}:${seconds}`;
+    countdownEl.innerText = `Next word in ${hours}:${minutes}:${seconds} `;
   }
   updateCountdown();
   setInterval(updateCountdown, 1000);
