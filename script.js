@@ -358,7 +358,11 @@ function checkGuess() {
         showStatsModal();
         document.getElementById('stats-modal').classList.add('open');
       }, 1500);
-      if (typeof confetti === 'function') confetti({ particleCount: 200, spread: 60 });
+      if (typeof confetti === 'function') confetti({
+        particleCount: 200,
+        spread: 60,
+        origin: { y: 0.6 }
+      });
       currentRow = 6;
     } else {
       currentRow++;
