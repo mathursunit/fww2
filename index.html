@@ -29,8 +29,6 @@
   <div id="toast-container"></div>
   <div class="game-container">
     <div class="game-header">
-      <button id="stats-btn">📊</button>
-      <button id="theme-btn">🌙</button>
       <div class="logo">
         <div class="logo-main">
           <span class="logo-orange">Sun</span><span class="logo-blue">Sar</span>
@@ -38,11 +36,17 @@
         </div>
         <div class="logo-sub">Fun with words</div>
       </div>
-      <div class="mode-selector">
-        <button class="mode-btn" data-mode="4">4</button>
-        <button class="mode-btn active" data-mode="5">5</button>
-        <button class="mode-btn" data-mode="6">6</button>
+
+      <div class="header-controls">
+        <button id="stats-btn">📊</button>
+        <div class="mode-selector">
+          <button class="mode-btn" data-mode="4">4</button>
+          <button class="mode-btn active" data-mode="5">5</button>
+          <button class="mode-btn" data-mode="6">6</button>
+        </div>
+        <button id="theme-btn">🌙</button>
       </div>
+
       <div id="color-legend">
         <div class="legend-item">
           <div class="legend-dot correct"></div>Correct
@@ -55,6 +59,7 @@
         </div>
       </div>
     </div>
+
     <div id="grid">
       <div class="row">
         <div class="tile"></div>
@@ -99,6 +104,7 @@
         <div class="tile"></div>
       </div>
     </div>
+
     <div id="keyboard">
       <div class="key-row">
         <button class="key">Q</button><button class="key">W</button><button class="key">E</button><button
@@ -118,8 +124,8 @@
           data-key="BACKSPACE">⌫</button>
       </div>
     </div>
-  </div>
-  <div id="countdown">Next word in 00:00:00</div>
+
+    <div id="countdown">Next word in 00:00:00</div>
   </div>
 
   <!-- Stats Modal -->
