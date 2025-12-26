@@ -704,6 +704,12 @@ h1 {
   border-radius: 12px;
   text-transform: uppercase;
   flex-shrink: 0;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.game-date:hover {
+  filter: brightness(0.9);
+  transform: scale(1.05);
 }
 
 @keyframes spin-sun {

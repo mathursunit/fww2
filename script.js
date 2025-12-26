@@ -630,10 +630,10 @@ if (logo) {
   });
 }
 
-// Archive Button Listener
-const archiveBtn = document.getElementById('archive-btn');
-if (archiveBtn) {
-  archiveBtn.addEventListener('click', openArchive);
+// Archive Date Listener
+const archiveDate = document.getElementById('game-date');
+if (archiveDate) {
+  archiveDate.addEventListener('click', openArchive);
 }
 
 // Hint Button Listener
