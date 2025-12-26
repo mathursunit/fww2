@@ -311,11 +311,13 @@ h1 {
 }
 
 .game-header {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
+  width: 100%;
 }
 
 .logo-main {
@@ -437,14 +439,14 @@ h1 {
 
 /* Stats Button */
 #stats-btn {
-  position: fixed;
-  top: 10px;
-  left: 10px;
+  position: absolute;
+  top: 0;
+  left: 0;
   background: none;
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  z-index: 1000;
+  z-index: 100;
   padding: 5px;
   border-radius: 50%;
   background-color: rgba(255, 255, 255, 0.8);
