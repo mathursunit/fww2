@@ -309,6 +309,12 @@ function addLetter(letter) {
 
 function deleteLetter() {
   if (currentCol > 0) {
+    // Clear invalid state if present
+    const row = rows[currentRow];
+    if (row[0].classList.contains('invalid')) {
+      row.forEach(tile => tile.classList.remove('invalid'));
+    }
+
     currentCol--;
     rows[currentRow][currentCol].textContent = '';
   }
@@ -326,7 +332,7 @@ function checkGuess() {
   }
   const guess = rows[currentRow].map(t => t.textContent).join('');
   if (!WORDS.includes(guess)) {
-    showToast('Not in word list');
+    rows[currentRow].forEach(tile => tile.classList.add('invalid'));
     return;
   }
 

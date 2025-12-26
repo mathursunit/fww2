@@ -159,6 +159,36 @@ h1 {
   color: #ffffff !important;
 }
 
+.tile.invalid {
+  border-color: #ef4444 !important;
+  /* Red-500 */
+  color: #ef4444 !important;
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-2px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(2px);
+  }
+}
+
 #keyboard {
   display: flex;
   flex-direction: column;
