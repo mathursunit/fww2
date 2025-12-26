@@ -13,6 +13,82 @@ function getDailyIndex() {
 const GAME_STATE_KEY_BASE = 'fww_gamestate';
 const STATS_KEY_BASE = 'fww_stats';
 
+// Settings & State
+const settings = {
+  theme: localStorage.getItem('fww_theme') || 'light', // 'light' or 'dark'
+  colorblind: localStorage.getItem('fww_colorblind') === 'true',
+  sound: localStorage.getItem('fww_sound') !== 'false',
+  haptic: localStorage.getItem('fww_haptic') !== 'false'
+};
+
+const SoundEngine = {
+  ctx: null,
+  init() {
+    if (!this.ctx) {
+      try {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) {
+        console.warn('AudioContext not supported');
+      }
+    }
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+  },
+  playThump() {
+    if (!settings.sound || !this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.1);
+  },
+  playDing() {
+    if (!settings.sound || !this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+    gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.2);
+  },
+  playWin() {
+    if (!settings.sound || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    notes.forEach((freq, i) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + i * 0.12);
+      gain.gain.setValueAtTime(0, now + i * 0.12);
+      gain.gain.linearRampToValueAtTime(0.08, now + i * 0.12 + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.5);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now + i * 0.12);
+      osc.stop(now + i * 0.12 + 0.5);
+    });
+  }
+};
+
+const HapticEngine = {
+  vibrate(pattern) {
+    if (settings.haptic && navigator.vibrate) {
+      navigator.vibrate(pattern);
+    }
+  }
+};
+
+
 const WORDS_DATA = {
   4: { hashes: new Set(), solutions: [] },
   5: { hashes: new Set(), solutions: [] },
@@ -86,6 +162,7 @@ const rows = [];
 
   // Initialize mode buttons
   setupModeButtons();
+  setupSettings();
 
   // Update UI to reflect saved mode initial state
   document.querySelectorAll('.mode-btn').forEach(b => {
@@ -144,6 +221,73 @@ function showToast(message) {
     toast.classList.remove('show');
     setTimeout(() => toast.remove(), 200);
   }, 2000);
+}
+
+// Settings UI & Modal Logic
+function setupSettings() {
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsModal = document.getElementById('settings-modal');
+  const closeBtn = settingsModal.querySelector('.close-btn');
+
+  const themeBtn = document.getElementById('theme-btn');
+  const colorblindToggle = document.getElementById('colorblind-toggle');
+  const soundToggle = document.getElementById('sound-toggle');
+  const hapticToggle = document.getElementById('haptic-toggle');
+
+  // Load initial states
+  if (settings.theme === 'dark' || (!localStorage.getItem('fww_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.body.classList.add('dark-mode');
+    themeBtn.textContent = '☀️';
+  }
+
+  if (settings.colorblind) {
+    document.body.classList.add('colorblind-mode');
+    colorblindToggle.checked = true;
+  }
+
+  soundToggle.checked = settings.sound;
+  hapticToggle.checked = settings.haptic;
+
+  // Listeners
+  settingsBtn.addEventListener('click', () => {
+    settingsModal.classList.add('open');
+    SoundEngine.init(); // Essential to unlock audio on user gesture
+  });
+
+  closeBtn.addEventListener('click', () => settingsModal.classList.remove('open'));
+  settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) settingsModal.classList.remove('open'); });
+
+  themeBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    themeBtn.textContent = isDark ? '☀️' : '🌙';
+    settings.theme = isDark ? 'dark' : 'light';
+    localStorage.setItem('fww_theme', settings.theme);
+    HapticEngine.vibrate(20);
+    SoundEngine.playThump();
+  });
+
+  colorblindToggle.addEventListener('change', () => {
+    settings.colorblind = colorblindToggle.checked;
+    document.body.classList.toggle('colorblind-mode', settings.colorblind);
+    localStorage.setItem('fww_colorblind', settings.colorblind);
+    HapticEngine.vibrate(20);
+  });
+
+  soundToggle.addEventListener('change', () => {
+    settings.sound = soundToggle.checked;
+    localStorage.setItem('fww_sound', settings.sound);
+    if (settings.sound) {
+      SoundEngine.init();
+      SoundEngine.playDing();
+    }
+  });
+
+  hapticToggle.addEventListener('change', () => {
+    settings.haptic = hapticToggle.checked;
+    localStorage.setItem('fww_haptic', settings.haptic);
+    HapticEngine.vibrate(50);
+  });
 }
 
 function getStats() {
@@ -299,6 +443,7 @@ function startGame() {
   // I'll move listener setup to the bottom IIFE or global scope, similar to mode buttons.
 
   loadGame(dailyIndex);
+  SoundEngine.init();
 }
 
 // One-time Setup for Input
@@ -336,30 +481,7 @@ if (logo) {
 // Stats UI (One time)
 const statsBtn = document.getElementById('stats-btn');
 const modal = document.getElementById('stats-modal');
-const closeBtn = document.querySelector('.close-btn');
-
-// Theme UI
-const themeBtn = document.getElementById('theme-btn');
-if (themeBtn) {
-  // Init Theme
-  const savedTheme = localStorage.getItem('fww_theme');
-  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-  if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
-    document.body.classList.add('dark-mode');
-    themeBtn.textContent = '☀️';
-  } else {
-    themeBtn.textContent = '🌙';
-  }
-
-  themeBtn.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    themeBtn.textContent = isDark ? '☀️' : '🌙';
-    localStorage.setItem('fww_theme', isDark ? 'dark' : 'light');
-    if (navigator.vibrate) navigator.vibrate(20);
-  });
-}
+const closeBtn = modal.querySelector('.close-btn');
 
 if (statsBtn && modal) {
   statsBtn.addEventListener('click', () => {
@@ -482,11 +604,14 @@ function updateKeyboard(letter, state) {
 
 function onKey(e) {
   const key = e.key.toUpperCase();
-  if (navigator.vibrate) navigator.vibrate(50);
   if (gameStatus !== 'IN_PROGRESS' || currentRow >= 6) return;
   if (key === 'ENTER') return checkGuess();
   if (key === 'BACKSPACE') return deleteLetter();
-  if (/^[A-Z]$/.test(key) && currentCol < currentWordLength) addLetter(key);
+  if (/^[A-Z]$/.test(key) && currentCol < currentWordLength) {
+    HapticEngine.vibrate(20);
+    SoundEngine.playThump();
+    addLetter(key);
+  }
 }
 
 function addLetter(letter) {
@@ -517,11 +642,14 @@ function findKeyBtn(ch) {
 function checkGuess() {
   if (currentCol < currentWordLength) {
     showToast('Not enough letters');
+    HapticEngine.vibrate([50, 50, 50]);
     return;
   }
   const guess = rows[currentRow].map(t => t.textContent).join('');
   if (!WORDS_HASHES.has(hash32(guess))) {
-    rows[currentRow].forEach(tile => tile.classList.add('invalid'));
+    rows[currentRow].forEach(tile => tile.classList.add('invalid', 'shake'));
+    HapticEngine.vibrate([100, 50, 100]);
+    showToast('Not in word list');
     return;
   }
 
@@ -538,8 +666,14 @@ function checkGuess() {
         tile.classList.remove('flip');
         tile.classList.add(state);
         updateKeyboard(letter, state);
+        if (state === 'correct') {
+          SoundEngine.playDing();
+          HapticEngine.vibrate(30);
+        } else {
+          HapticEngine.vibrate(15);
+        }
       }, { once: true });
-    }, i * 300);
+    }, i * 350);
   });
 
   // After animations
@@ -549,6 +683,9 @@ function checkGuess() {
       saveGame();
       updateStats(true, currentRow + 1); // 1-based guess count
       showToast('Great');
+      SoundEngine.playWin();
+      HapticEngine.vibrate([100, 30, 200, 50, 500]);
+
       setTimeout(() => {
         showStatsModal();
         document.getElementById('stats-modal').classList.add('open');

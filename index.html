@@ -47,6 +47,7 @@
           <button class="mode-btn" data-mode="6">6</button>
         </div>
         <button id="theme-btn">🌙</button>
+        <button id="settings-btn">⚙️</button>
       </div>
 
       <div id="color-legend">
@@ -178,6 +179,47 @@
       <p id="disclaimer"><strong>Disclaimer: This is a fun project to learn coding and has no commercial value. All
           rights
           are with the amazing NYTimes only.</strong></p>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-content">
+      <button class="close-btn">&times;</button>
+      <div class="stats-header">Settings</div>
+      <div class="settings-list">
+        <div class="setting-item">
+          <div class="setting-label">
+            <div class="setting-title">Colorblind Mode</div>
+            <div class="setting-desc">High contrast colors</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="colorblind-toggle">
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <div class="setting-label">
+            <div class="setting-title">Sound Effects</div>
+            <div class="setting-desc">Thumps, dings, and melodies</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="sound-toggle" checked>
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <div class="setting-label">
+            <div class="setting-title">Haptic Feedback</div>
+            <div class="setting-desc">Vibrations on mobile</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="haptic-toggle" checked>
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+      <p id="disclaimer" style="margin-top: 2rem;"><strong>Enjoy the new Visual & Audio polish!</strong></p>
     </div>
   </div>
 

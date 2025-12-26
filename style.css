@@ -16,6 +16,20 @@
   --color-mode-btn-active: #ffffff;
   --color-mode-btn-text: #64748b;
   --color-header-btn: rgba(255, 255, 255, 0.8);
+
+  /* Game States - Default (Green/Yellow) */
+  --color-correct: #6aaa64;
+  --color-correct-dark: #538d4e;
+  --color-present: #c9b458;
+  --color-present-dark: #b59f3b;
+}
+
+body.colorblind-mode {
+  /* High Contrast (Orange/Blue) */
+  --color-correct: #f5793a;
+  --color-correct-dark: #e86121;
+  --color-present: #85c1e9;
+  --color-present-dark: #3498db;
 }
 
 body.dark-mode {
@@ -61,6 +75,99 @@ body {
   /* Prevent scrolling if possible */
   padding-bottom: env(safe-area-inset-bottom);
   touch-action: manipulation;
+}
+
+#guess-graph {
+  padding-bottom: 20px;
+}
+
+/* Settings Styles */
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-tile-border);
+}
+
+.setting-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.setting-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.setting-desc {
+  font-size: 0.85rem;
+  color: var(--color-subtext);
+}
+
+/* Simple Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked+.slider {
+  background-color: #6aaa64;
+}
+
+input:focus+.slider {
+  box-shadow: 0 0 1px #6aaa64;
+}
+
+input:checked+.slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
 }
 
 .game-container {
@@ -173,21 +280,46 @@ h1 {
   animation: flip 0.6s ease-in-out forwards;
 }
 
-/* Vibrant Game States - Blue/Pink Theme */
+/* Vibrant Game States */
 .correct {
-  background-color: #3b82f6 !important;
-  /* Bright Blue */
-  border-color: #3b82f6 !important;
-  box-shadow: 0px 2px 0px #2563eb !important;
+  background-color: var(--color-correct) !important;
+  border-color: var(--color-correct) !important;
+  box-shadow: 0px 2px 0px var(--color-correct-dark) !important;
   color: #ffffff !important;
 }
 
 .present {
-  background-color: #ec4899 !important;
-  /* Vivid Pink */
-  border-color: #ec4899 !important;
-  box-shadow: 0px 2px 0px #db2777 !important;
+  background-color: var(--color-present) !important;
+  border-color: var(--color-present) !important;
+  box-shadow: 0px 2px 0px var(--color-present-dark) !important;
   color: #ffffff !important;
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
 }
 
 .absent {
@@ -526,6 +658,21 @@ h1 {
 }
 
 #theme-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 100;
+  padding: 5px;
+  border-radius: 50%;
+  background-color: var(--color-header-btn);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#settings-btn {
   background: none;
   border: none;
   font-size: 1.5rem;
