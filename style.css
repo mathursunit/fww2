@@ -847,11 +847,16 @@ h1 {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 100dvh;
+  /* Use dynamic viewport height */
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 2000;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  /* Start from top with safe padding */
+  padding-top: calc(20px + env(safe-area-inset-top));
+  /* Extra safety for address bar */
+  box-sizing: border-box;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -888,7 +893,8 @@ h1 {
 
 .close-btn {
   position: absolute;
-  top: 10px;
+  top: 15px;
+  /* Pushed down slightly more */
   right: 15px;
   font-size: 1.8rem;
   /* Slightly larger */
