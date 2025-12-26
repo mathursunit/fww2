@@ -3,6 +3,13 @@
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const EPOCH_MS = Date.UTC(2025, 0, 1);
 
+function getDailyIndex() {
+  const now = new Date();
+  const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.floor((todayUTC - EPOCH_MS) / MS_PER_DAY);
+}
+
+
 const GAME_STATE_KEY_BASE = 'fww_gamestate';
 const STATS_KEY_BASE = 'fww_stats';
 
@@ -248,9 +255,7 @@ function startGame() {
   rows.length = 0;
 
   // Word of the day based on local date
-  const now = new Date();
-  const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-  const dailyIndex = Math.floor((todayUTC - EPOCH_MS) / MS_PER_DAY);
+  const dailyIndex = getDailyIndex();
   const solutionIndex = ((dailyIndex % WORDS_SOLUTIONS.length) + WORDS_SOLUTIONS.length) % WORDS_SOLUTIONS.length;
   solution = WORDS_SOLUTIONS[solutionIndex];
 
