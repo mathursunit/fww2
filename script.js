@@ -450,7 +450,7 @@ function getStatsForMode(mode) {
     guesses: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, fail: 0 }
   };
   try {
-    const s = localStorage.getItem(`${STATS_KEY_BASE}_${mode} `);
+    const s = localStorage.getItem(`${STATS_KEY_BASE}_${mode}`);
     return s ? { ...defaultStats, ...JSON.parse(s) } : defaultStats;
   } catch {
     return defaultStats;
@@ -516,7 +516,7 @@ function showStatsModal(mode = currentWordLength) {
     if (mode === currentWordLength && gameStatus === 'WON' && currentRow + 1 === i) {
       bar.classList.add('highlight');
     }
-    bar.style.width = `${widthPct}% `;
+    bar.style.width = `${widthPct}%`;
     bar.textContent = count;
     if (count > 0) bar.style.paddingLeft = '5px';
 
