@@ -337,10 +337,13 @@ function useHint() {
   HapticEngine.vibrate(50);
   SoundEngine.playDing();
 
-  // Update keyboard if not already known
-  const key = findKeyBtn(letter);
-  if (key && !key.classList.contains('correct')) {
-    key.classList.add('present'); // Mark as known
+  // After hint is placed, sync cursor if it lands on the hint
+  if (currentCol === hintPos) {
+    currentCol++;
+    // If we land on another hint (unlikely but safe), skip it
+    while (currentCol < currentWordLength && rows[currentRow][currentCol].classList.contains('hinted')) {
+      currentCol++;
+    }
   }
 
   saveGame();
@@ -748,6 +751,11 @@ function loadGame(currentDayIndex) {
       }
     }
 
+    // Sync cursor to avoid landing on hint or overwriting
+    while (currentCol < currentWordLength && rows[currentRow] && rows[currentRow][currentCol].classList.contains('hinted')) {
+      currentCol++;
+    }
+
     if (gameStatus === 'WON' || gameStatus === 'LOST') {
       if (gameStatus === 'WON') {
         currentRow = 6; // Lock input
@@ -815,24 +823,46 @@ function onKey(e) {
 }
 
 function addLetter(letter) {
-  if (rows[currentRow] && rows[currentRow][currentCol]) {
+  // If current tile is hinted, skip to next non-hinted
+  while (currentCol < currentWordLength && rows[currentRow][currentCol].classList.contains('hinted')) {
+    currentCol++;
+  }
+
+  if (currentCol < currentWordLength && rows[currentRow] && rows[currentRow][currentCol]) {
     // Clear invalid state if user types again
     if (currentCol === 0 || rows[currentRow][0].classList.contains('invalid')) {
       rows[currentRow].forEach(tile => tile.classList.remove('invalid', 'shake'));
     }
+
     rows[currentRow][currentCol].textContent = letter;
     currentCol++;
+
+    // Skip next tiles if they are hinted
+    while (currentCol < currentWordLength && rows[currentRow][currentCol].classList.contains('hinted')) {
+      currentCol++;
+    }
   }
 }
 
 function deleteLetter() {
   if (currentCol > 0) {
-    // Clear invalid state if present
+    // Re-check for invalid state removal on delete
     const row = rows[currentRow];
     row.forEach(tile => tile.classList.remove('invalid', 'shake'));
 
     currentCol--;
-    rows[currentRow][currentCol].textContent = '';
+    // Skip backward over hinted tiles
+    while (currentCol > 0 && rows[currentRow][currentCol].classList.contains('hinted')) {
+      currentCol--;
+    }
+
+    // Only clear if not hinted
+    if (!rows[currentRow][currentCol].classList.contains('hinted')) {
+      rows[currentRow][currentCol].textContent = '';
+    } else {
+      // If we landed on a hint during deletion, it means there are no non-hinted letters left to delete before it.
+      // We should stay at the position just after the hint or at the hint if it's the very first tile.
+    }
   }
 }
 
