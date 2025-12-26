@@ -278,6 +278,29 @@ const statsBtn = document.getElementById('stats-btn');
 const modal = document.getElementById('stats-modal');
 const closeBtn = document.querySelector('.close-btn');
 
+// Theme UI
+const themeBtn = document.getElementById('theme-btn');
+if (themeBtn) {
+  // Init Theme
+  const savedTheme = localStorage.getItem('fww_theme');
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
+    document.body.classList.add('dark-mode');
+    themeBtn.textContent = '☀️';
+  } else {
+    themeBtn.textContent = '🌙';
+  }
+
+  themeBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    themeBtn.textContent = isDark ? '☀️' : '🌙';
+    localStorage.setItem('fww_theme', isDark ? 'dark' : 'light');
+    if (navigator.vibrate) navigator.vibrate(20);
+  });
+}
+
 if (statsBtn && modal) {
   statsBtn.addEventListener('click', () => {
     showStatsModal(currentWordLength);
