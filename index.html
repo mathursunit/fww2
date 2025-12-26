@@ -27,6 +27,7 @@
 </head>
 
 <body tabindex="0">
+  <button id="stats-btn">📊</button>
   <div id="countdown">Next word in 00:00:00</div>
   <img alt="SunSar - Fun With Words" class="logo" src="logo.png" />
   <div id="color-legend">
@@ -107,6 +108,48 @@
       </div>
     </div>
   </div>
+
+  <!-- Stats Modal -->
+  <div class="modal-overlay" id="stats-modal">
+    <div class="modal-content">
+      <button class="close-btn">&times;</button>
+      <div class="stats-container">
+
+        <!-- Big Stats -->
+        <div>
+          <div class="stats-header">Statistics</div>
+          <div class="stats-grid">
+            <div class="stat-box">
+              <div class="stat-val" id="stat-played">0</div>
+              <div class="stat-label">Played</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="stat-win">0</div>
+              <div class="stat-label">Win %</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="stat-streak">0</div>
+              <div class="stat-label">Current Streak</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="stat-max">0</div>
+              <div class="stat-label">Max Streak</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Distribution -->
+        <div>
+          <div class="stats-header">Guess Distribution</div>
+          <div class="graph-container" id="guess-graph">
+            <!-- Bars injected by JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <script src="script.js"></script>
   <p id="disclaimer"><strong>Disclaimer: This is a fun project to learn coding and has no commercial value. All rights
