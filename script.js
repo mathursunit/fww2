@@ -112,6 +112,7 @@ function updateStats(won, guessCount) {
 function showStatsModal() {
   const stats = getStats();
 
+  document.getElementById('stats-mode-label').textContent = currentWordLength;
   document.getElementById('stat-played').textContent = stats.played;
   const winPct = stats.played > 0 ? Math.round((stats.won / stats.played) * 100) : 0;
   document.getElementById('stat-win').textContent = winPct;
