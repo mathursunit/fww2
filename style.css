@@ -722,39 +722,86 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 15px;
+  padding: 10px 15px;
   background-color: var(--color-mode-bg);
   border-radius: 8px;
-  transition: background-color 0.2s;
+  border: 2px solid transparent;
+  transition: all 0.2s;
 }
 
-.archive-item:hover {
+.archive-item.active-row {
+  border-color: var(--color-correct);
+  background-color: var(--color-tile-bg);
+}
+
+.active-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--color-correct);
+  margin-top: 2px;
+  letter-spacing: 0.05em;
+}
+
+.archive-modes {
+  display: flex;
+  gap: 6px;
+}
+
+.archive-tile {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: 1px solid var(--color-tile-border);
+  transition: transform 0.1s;
+  user-select: none;
+}
+
+.archive-tile:hover {
+  filter: brightness(0.9);
+}
+
+.archive-tile:active {
+  transform: scale(0.9);
+}
+
+.archive-tile.not-played {
   background-color: var(--color-key-bg);
+  color: var(--color-key-text);
+}
+
+.archive-tile.correct {
+  background-color: var(--color-correct);
+  border-color: var(--color-correct);
+  color: #fff;
+}
+
+.archive-tile.present {
+  background-color: var(--color-present);
+  border-color: var(--color-present);
+  color: #fff;
+}
+
+.archive-tile.absent {
+  background-color: var(--color-absent);
+  border-color: var(--color-absent);
+  color: #fff;
+}
+
+.archive-tile.active {
+  box-shadow: 0 0 0 2px var(--color-text);
+  transform: scale(1.1);
+  z-index: 1;
 }
 
 .archive-date {
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.archive-status {
-  font-size: 0.8rem;
-  color: var(--color-subtext);
-}
-
-.archive-play-btn {
-  background-color: var(--color-correct);
-  color: white;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 15px;
   font-weight: 700;
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-
-.archive-play-btn.played {
-  background-color: var(--color-absent);
+  font-size: 0.9rem;
 }
 
 

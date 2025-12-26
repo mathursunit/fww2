@@ -183,9 +183,9 @@ function getStatsKey() {
   return `${STATS_KEY_BASE}_${currentWordLength}`;
 }
 
-function getGameStateKey(dayIdx = activeDayIndex) {
+function getGameStateKey(dayIdx = activeDayIndex, wordLen = currentWordLength) {
   // Use a day-specific key to support Archive
-  return `${GAME_STATE_KEY_BASE}_${currentWordLength}_d${dayIdx}`;
+  return `${GAME_STATE_KEY_BASE}_${wordLen}_d${dayIdx}`;
 }
 
 function setupModeButtons() {
@@ -359,33 +359,51 @@ function openArchive() {
     const date = new Date(EPOCH_MS + day * MS_PER_DAY);
     const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 
-    const savedState = localStorage.getItem(getGameStateKey(day));
-    let statusText = 'Not Played';
-    let isPlayed = false;
+    const isCurrentDay = (day === activeDayIndex);
 
-    if (savedState) {
-      try {
-        const state = JSON.parse(savedState);
-        statusText = state.gameStatus === 'WON' ? 'Solved' : (state.gameStatus === 'LOST' ? 'Failed' : 'In Progress');
-        isPlayed = (state.gameStatus === 'WON' || state.gameStatus === 'LOST');
-      } catch (e) { }
-    }
+    let modesHTML = '';
+    [4, 5, 6].forEach(m => {
+      const stateKey = getGameStateKey(day, m);
+      const savedState = localStorage.getItem(stateKey);
+      let statusClass = 'not-played';
+      if (savedState) {
+        try {
+          const state = JSON.parse(savedState);
+          if (state.gameStatus === 'WON') statusClass = 'correct';
+          else if (state.gameStatus === 'LOST') statusClass = 'absent';
+          else statusClass = 'present';
+        } catch (e) { }
+      }
+
+      // Highlight if this specific mode/day is active
+      const isActive = (isCurrentDay && m === currentWordLength);
+      modesHTML += `<div class="archive-tile ${statusClass} ${isActive ? 'active' : ''}" data-day="${day}" data-mode="${m}">${m}</div>`;
+    });
 
     const item = document.createElement('div');
-    item.className = 'archive-item';
+    item.className = `archive-item ${isCurrentDay ? 'active-row' : ''}`;
     item.innerHTML = `
-      <div class="setting-label">
+      <div class="archive-date-info">
         <div class="archive-date">${dateStr}${day === today ? ' (Today)' : ''}</div>
-        <div class="archive-status">${statusText}</div>
+        ${isCurrentDay ? '<div class="active-label">CURRENT PUZZLE</div>' : ''}
       </div>
-      <button class="archive-play-btn ${isPlayed ? 'played' : ''}" data-day="${day}">
-        ${day === today ? 'Play' : 'Replay'}
-      </button>
+      <div class="archive-modes">
+        ${modesHTML}
+      </div>
     `;
 
-    item.querySelector('button').addEventListener('click', () => {
-      startGame(day);
-      modal.classList.remove('open');
+    // Add listeners to tiles
+    item.querySelectorAll('.archive-tile').forEach(tile => {
+      tile.addEventListener('click', async () => {
+        const targetDay = parseInt(tile.dataset.day);
+        const targetMode = parseInt(tile.dataset.mode);
+
+        if (targetMode !== currentWordLength) {
+          await switchMode(targetMode);
+        }
+        startGame(targetDay);
+        modal.classList.remove('open');
+      });
     });
 
     list.appendChild(item);
