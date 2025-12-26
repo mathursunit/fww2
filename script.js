@@ -677,11 +677,24 @@ function saveGame() {
     .map(row => row.map(tile => tile.textContent).join(''))
     .filter(word => word.length === currentWordLength); // Only complete guesses
 
+  // Check if there is a hinted tile in the current row
+  let hintedLetter = null;
+  let hintedPos = null;
+  if (hintsUsed && rows[currentRow]) {
+    const tileIdx = rows[currentRow].findIndex(t => t.classList.contains('hinted'));
+    if (tileIdx !== -1) {
+      hintedLetter = rows[currentRow][tileIdx].textContent;
+      hintedPos = tileIdx;
+    }
+  }
+
   const state = {
     dayIndex: activeDayIndex,
     guesses: guesses,
     gameStatus: gameStatus,
-    hintsUsed: hintsUsed
+    hintsUsed: hintsUsed,
+    hintedLetter: hintedLetter,
+    hintedPos: hintedPos
   };
   localStorage.setItem(getGameStateKey(), JSON.stringify(state));
 }
@@ -722,8 +735,18 @@ function loadGame(currentDayIndex) {
     gameStatus = state.gameStatus;
     hintsUsed = !!state.hintsUsed;
 
+    // Restore Hint UI
     const hintBtn = document.getElementById('hint-btn');
     if (hintsUsed && hintBtn) hintBtn.classList.add('disabled');
+
+    // Restore hinted tile visually if game is in progress
+    if (hintsUsed && state.hintedLetter && state.hintedPos !== null && rows[currentRow]) {
+      const tile = rows[currentRow][state.hintedPos];
+      if (tile) {
+        tile.textContent = state.hintedLetter;
+        tile.classList.add('hinted');
+      }
+    }
 
     if (gameStatus === 'WON' || gameStatus === 'LOST') {
       if (gameStatus === 'WON') {
