@@ -435,6 +435,7 @@ function loadGame(currentDayIndex) {
 }
 
 function evaluateGuess(guess) {
+  if (!solution) return new Array(currentWordLength).fill('absent');
   const solArr = solution.split('');
   const solCount = {};
   solArr.forEach(l => solCount[l] = (solCount[l] || 0) + 1);
@@ -545,13 +546,13 @@ function checkGuess() {
         showStatsModal();
         document.getElementById('stats-modal').classList.add('open');
       }, 1500);
-      if (typeof confetti === 'function') {
+      if (typeof window.confetti === 'function') {
         const kb = document.getElementById('keyboard');
-        const yPos = kb ? kb.getBoundingClientRect().top / window.innerHeight : 0.7;
-        confetti({
-          particleCount: 200,
-          spread: 80,
-          origin: { y: Math.max(0, Math.min(1, yPos - 0.05)) } // Slightly above keyboard
+        const yPos = kb ? kb.getBoundingClientRect().top / window.innerHeight : 0.75;
+        window.confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: Math.max(0, Math.min(1, yPos - 0.1)) }
         });
       }
       currentRow = 6;
@@ -569,7 +570,7 @@ function checkGuess() {
       }
       saveGame();
     }
-  }, currentWordLength * 300 + 100);
+  }, currentWordLength * 350 + 200);
 }
 
 
