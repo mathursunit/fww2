@@ -15,6 +15,7 @@
   --color-mode-bg: #e2e8f0;
   --color-mode-btn-active: #ffffff;
   --color-mode-btn-text: #64748b;
+  --color-header-btn: rgba(255, 255, 255, 0.8);
 }
 
 body.dark-mode {
@@ -33,6 +34,7 @@ body.dark-mode {
   --color-mode-bg: #3a3a3c;
   --color-mode-btn-active: #121213;
   --color-mode-btn-text: #94a3b8;
+  --color-header-btn: rgba(255, 255, 255, 0.1);
 }
 
 body,
@@ -511,7 +513,7 @@ h1 {
   z-index: 100;
   padding: 5px;
   border-radius: 50%;
-  background-color: var(--color-overlay);
+  background-color: var(--color-header-btn);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -526,7 +528,7 @@ h1 {
   z-index: 100;
   padding: 5px;
   border-radius: 50%;
-  background-color: var(--color-overlay);
+  background-color: var(--color-header-btn);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
