@@ -15,7 +15,7 @@ const STATS_KEY_BASE = 'fww_stats';
 
 // Settings & State
 const settings = {
-  theme: localStorage.getItem('fww_theme') || 'light', // 'light' or 'dark'
+  theme: localStorage.getItem('fww_theme') || 'dark', // 'light' or 'dark'
   colorblind: localStorage.getItem('fww_colorblind') === 'true',
   sound: localStorage.getItem('fww_sound') !== 'false',
   haptic: localStorage.getItem('fww_haptic') !== 'false'
@@ -240,9 +240,12 @@ function setupSettings() {
   const hapticToggle = document.getElementById('haptic-toggle');
 
   // Load initial states
-  if (settings.theme === 'dark' || (!localStorage.getItem('fww_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  if (settings.theme === 'dark') {
     document.body.classList.add('dark-mode');
     themeBtn.textContent = '☀️';
+  } else {
+    document.body.classList.remove('dark-mode');
+    themeBtn.textContent = '🌙';
   }
 
   if (settings.colorblind) {
