@@ -932,7 +932,7 @@ h1 {
 }
 
 
-/* Modal Overlay */
+
 .modal-overlay {
   display: none;
   position: fixed;
@@ -945,12 +945,20 @@ h1 {
   z-index: 2000;
   justify-content: center;
   align-items: flex-start;
-  /* Start from top with safe padding */
+  /* Default for mobile */
   padding-top: calc(20px + env(safe-area-inset-top));
-  /* Extra safety for address bar */
+  /* Mobile safety */
   box-sizing: border-box;
   opacity: 0;
   transition: opacity 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .modal-overlay {
+    align-items: center;
+    /* Center on desktop */
+    padding-top: 0;
+  }
 }
 
 .modal-overlay.open {
