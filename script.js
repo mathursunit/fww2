@@ -3,33 +3,71 @@
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const EPOCH_MS = Date.UTC(2025, 0, 1);
 
-let currentWordLength = 5;
-const WORDS_DATA = { 4: [], 5: [], 6: [] };
-let WORDS = []; // Active list alias
-let solution = '';
-let currentRow = 0, currentCol = 0;
-let gameStatus = 'IN_PROGRESS'; // 'IN_PROGRESS', 'WON', 'LOST'
-const rows = [];
 const GAME_STATE_KEY_BASE = 'fww_gamestate';
 const STATS_KEY_BASE = 'fww_stats';
+
+const WORDS_DATA = {
+  4: { hashes: new Set(), solutions: [] },
+  5: { hashes: new Set(), solutions: [] },
+  6: { hashes: new Set(), solutions: [] }
+};
+let WORDS_HASHES = new Set(); // Active hash set for validation
+let WORDS_SOLUTIONS = []; // Active solution list
+let solution = '';
+
+function hash32(str) {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    hash ^= str.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
+
+function deobfuscate(buffer) {
+  const xorKey = 0x55;
+  const decoded = new Uint8Array(buffer).map(b => b ^ xorKey);
+  return new TextDecoder().decode(decoded).split(',').filter(Boolean);
+}
 
 // Hidden reset variables
 let logoTapCount = 0;
 let logoTapTimer = null;
 
-// Load words for a specific mode
-async function loadWords(mode) {
-  if (WORDS_DATA[mode].length > 0) return WORDS_DATA[mode];
+// Load secure binary word data for a specific mode
+async function loadSecureWords(mode) {
+  if (WORDS_DATA[mode].solutions.length > 0) {
+    WORDS_HASHES = WORDS_DATA[mode].hashes;
+    WORDS_SOLUTIONS = WORDS_DATA[mode].solutions;
+    return;
+  }
   try {
-    const response = await fetch(`words${mode}.txt`);
-    const text = await response.text();
-    WORDS_DATA[mode] = text.split('\n').map(w => w.trim().toUpperCase()).filter(Boolean);
-    return WORDS_DATA[mode];
+    const [dictRes, solRes] = await Promise.all([
+      fetch(`dict${mode}.bin`),
+      fetch(`sol${mode}.dat`)
+    ]);
+
+    const dictBuf = await dictRes.arrayBuffer();
+    const solBuf = await solRes.arrayBuffer();
+
+    // Load hashes into a Set for O(1) secure validation
+    const u32 = new Uint32Array(dictBuf);
+    WORDS_DATA[mode].hashes = new Set(u32);
+
+    // Deobfuscate solutions
+    WORDS_DATA[mode].solutions = deobfuscate(solBuf);
+
+    WORDS_HASHES = WORDS_DATA[mode].hashes;
+    WORDS_SOLUTIONS = WORDS_DATA[mode].solutions;
   } catch (err) {
-    console.error(`Failed to load words${mode}.txt:`, err);
-    return [];
+    console.error(`Failed to load secure words for mode ${mode}:`, err);
   }
 }
+
+let currentWordLength = 5;
+let currentRow = 0, currentCol = 0;
+let gameStatus = 'IN_PROGRESS'; // 'IN_PROGRESS', 'WON', 'LOST'
+const rows = [];
 
 // Initialize
 (async function init() {
@@ -48,7 +86,7 @@ async function loadWords(mode) {
   });
 
   // Load only the current required words
-  await loadWords(currentWordLength);
+  await loadSecureWords(currentWordLength);
 
   startGame();
 })();
@@ -82,7 +120,7 @@ async function switchMode(mode) {
   });
 
   // Ensure words for new mode are loaded
-  await loadWords(mode);
+  await loadSecureWords(mode);
 
   // Restart game
   startGame();
@@ -202,17 +240,19 @@ function showStatsModal(mode = currentWordLength) {
   }
 }
 
-function getDailyIndex() {
-  const now = new Date();
-  const todayUTCmid = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  const days = Math.floor((todayUTCmid - EPOCH_MS) / MS_PER_DAY);
-  return ((days % WORDS.length) + WORDS.length) % WORDS.length;
-}
-
 function startGame() {
-  WORDS = WORDS_DATA[currentWordLength];
-  const dailyIndex = getDailyIndex();
-  solution = WORDS[dailyIndex];
+  // Reset active variables
+  currentRow = 0;
+  currentCol = 0;
+  gameStatus = 'IN_PROGRESS';
+  rows.length = 0;
+
+  // Word of the day based on local date
+  const now = new Date();
+  const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const dailyIndex = Math.floor((todayUTC - EPOCH_MS) / MS_PER_DAY);
+  const solutionIndex = ((dailyIndex % WORDS_SOLUTIONS.length) + WORDS_SOLUTIONS.length) % WORDS_SOLUTIONS.length;
+  solution = WORDS_SOLUTIONS[solutionIndex];
 
   // Rebuild Grid
   const grid = document.getElementById('grid');
@@ -472,7 +512,7 @@ function checkGuess() {
     return;
   }
   const guess = rows[currentRow].map(t => t.textContent).join('');
-  if (!WORDS.includes(guess)) {
+  if (!WORDS_HASHES.has(hash32(guess))) {
     rows[currentRow].forEach(tile => tile.classList.add('invalid'));
     return;
   }
