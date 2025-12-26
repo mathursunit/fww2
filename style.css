@@ -278,20 +278,13 @@ h1 {
 
 
 /* Countdown Timer */
-/* Countdown Timer - Absolute Top Right */
 #countdown {
-  position: fixed;
-  /* Fixed to viewport */
-  top: 10px;
-  right: 10px;
-  font-size: 0.75rem;
-  font-weight: bold;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #64748b;
   text-transform: uppercase;
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 4px 8px;
-  border-radius: 4px;
-  z-index: 1000;
-  /* Ensure on top */
+  text-align: center;
 }
 
 @media (max-width: 600px),
@@ -332,13 +325,14 @@ h1 {
 }
 
 
-/* Center-align and wrap disclaimer */
+/* Disclaimer inside Modal */
 #disclaimer {
   text-align: center;
-  margin: 1rem auto;
-  max-width: 90%;
-  word-wrap: break-word;
-  white-space: normal;
+  margin-top: 2rem;
+  margin-bottom: 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.4;
 }
 
 #version-badge {
