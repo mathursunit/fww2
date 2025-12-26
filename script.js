@@ -166,7 +166,9 @@ const rows = [];
 
   // Initialize mode buttons
   setupModeButtons();
+  initHolidays();
   setupSettings();
+  updateDynamicBackground();
 
   // Update UI to reflect saved mode initial state
   document.querySelectorAll('.mode-btn').forEach(b => {
@@ -271,6 +273,7 @@ function setupSettings() {
     themeBtn.textContent = isDark ? '☀️' : '🌙';
     settings.theme = isDark ? 'dark' : 'light';
     localStorage.setItem('fww_theme', settings.theme);
+    updateDynamicBackground();
     HapticEngine.vibrate(20);
     SoundEngine.playThump();
   });
@@ -975,3 +978,57 @@ function checkGuess() {
   updateCountdown();
   setInterval(updateCountdown, 1000);
 })();
+
+// Aesthetic - Dynamic Backgrounds & Holidays
+function initHolidays() {
+  const now = new Date();
+  const month = now.getMonth(); // 0-11
+  const day = now.getDate();
+
+  // Christmas: Dec 24, 25, 26
+  if (month === 11 && (day >= 24 && day <= 26)) {
+    document.body.classList.add('holiday-christmas');
+  }
+  // New Year: Dec 31, Jan 1
+  else if ((month === 11 && day === 31) || (month === 0 && day === 1)) {
+    document.body.classList.add('holiday-newyear');
+  }
+}
+
+function updateDynamicBackground() {
+  const bg = document.getElementById('dynamic-bg');
+  if (!bg) return;
+  bg.innerHTML = ''; // Clear existing
+
+  const isDark = document.body.classList.contains('dark-mode');
+
+  if (isDark) {
+    // Twinkling Stars
+    for (let i = 0; i < 50; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      const size = Math.random() * 2 + 1;
+      star.style.width = `${size}px`;
+      star.style.height = `${size}px`;
+      star.style.left = `${Math.random() * 100}%`;
+      star.style.top = `${Math.random() * 100}%`;
+      star.style.setProperty('--duration', `${Math.random() * 3 + 2}s`);
+      star.style.animationDelay = `${Math.random() * 5}s`;
+      bg.appendChild(star);
+    }
+  } else {
+    // Drifting Clouds
+    for (let i = 0; i < 6; i++) {
+      const cloud = document.createElement('div');
+      cloud.className = 'cloud';
+      const size = Math.random() * 100 + 100;
+      cloud.style.width = `${size}px`;
+      cloud.style.height = `${size * 0.6}px`;
+      cloud.style.left = `${Math.random() * -100}%`;
+      cloud.style.top = `${Math.random() * 70}%`;
+      cloud.style.animationDuration = `${Math.random() * 60 + 60}s`;
+      cloud.style.animationDelay = `${Math.random() * 20}s`;
+      bg.appendChild(cloud);
+    }
+  }
+}

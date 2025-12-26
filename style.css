@@ -58,6 +58,91 @@ h1,
 .toast {
   font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
   color: var(--color-text);
+  position: relative;
+}
+
+/* Dynamic Backgrounds */
+.dynamic-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Light Mode: Drifting Clouds */
+.cloud {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.6;
+  filter: blur(20px);
+  animation: drift linear infinite;
+}
+
+@keyframes drift {
+  from {
+    transform: translateX(-150px);
+  }
+
+  to {
+    transform: translateX(calc(100vw + 150px));
+  }
+}
+
+/* Dark Mode: Twinkling Stars */
+.star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  animation: twinkle var(--duration, 3s) ease-in-out infinite;
+}
+
+@keyframes twinkle {
+
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
+/* Seasonal Themes */
+body.holiday-christmas {
+  --color-correct: #d42426;
+  /* Christmas Red */
+  --color-present: #2e7d32;
+  /* Christmas Green */
+}
+
+body.holiday-newyear {
+  --color-correct: #d4af37;
+  /* Metallic Gold */
+  --color-present: #c0c0c0;
+  /* Silver */
+}
+
+body.holiday-christmas .sun-icon::before {
+  content: '🎄';
+  position: absolute;
+  font-size: 0.8em;
+  transform: translate(-10px, -5px);
+}
+
+body.holiday-newyear .sun-icon::before {
+  content: '🥂';
+  position: absolute;
+  font-size: 0.8em;
+  transform: translate(-10px, -5px);
 }
 
 /* Layout */
@@ -599,6 +684,7 @@ h1 {
   display: inline-block;
   line-height: 1;
   /* Fix vertical alignment */
+  position: relative;
 }
 
 .logo-sub {
