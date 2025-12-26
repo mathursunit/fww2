@@ -516,6 +516,13 @@ function startGame(dayIdx = null) {
   hintsUsed = false;
   rows.length = 0;
 
+  // Update UI Date
+  const dateEl = document.getElementById('game-date');
+  if (dateEl) {
+    const puzzleDate = new Date(EPOCH_MS + activeDayIndex * MS_PER_DAY);
+    dateEl.textContent = puzzleDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
   // Update Hint UI
   const hintBtn = document.getElementById('hint-btn');
   if (hintBtn) hintBtn.classList.remove('disabled');
