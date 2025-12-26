@@ -211,8 +211,8 @@ async function switchMode(mode) {
   // Ensure words for new mode are loaded
   await loadSecureWords(mode);
 
-  // Restart game
-  startGame();
+  // Restart game - persist the currently selected day
+  startGame(activeDayIndex);
 }
 
 function showToast(message) {
