@@ -25,11 +25,11 @@
 }
 
 body.colorblind-mode {
-  /* High Contrast (Orange/Blue) */
-  --color-correct: #f5793a;
-  --color-correct-dark: #e86121;
-  --color-present: #85c1e9;
-  --color-present-dark: #3498db;
+  /* User requested Blue for Correct in colorblind mode */
+  --color-correct: #3b82f6;
+  --color-correct-dark: #2563eb;
+  --color-present: #f5793a;
+  --color-present-dark: #e86121;
 }
 
 body.dark-mode {
@@ -442,31 +442,27 @@ h1 {
   background-color: var(--color-key-action);
 }
 
-/* Vibrant Game States for Keys - Blue/Pink */
+/* Vibrant Game States for Keys */
 .key.correct {
-  background-color: #3b82f6 !important;
-  /* Bright Blue */
-  border-color: #3b82f6 !important;
-  box-shadow: 0 4px 0 #2563eb !important;
+  background-color: var(--color-correct) !important;
+  border-color: var(--color-correct) !important;
+  box-shadow: 0 4px 0 var(--color-correct-dark) !important;
   color: #ffffff !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .key.present {
-  background-color: #ec4899 !important;
-  /* Vivid Pink */
-  border-color: #ec4899 !important;
-  box-shadow: 0 4px 0 #db2777 !important;
+  background-color: var(--color-present) !important;
+  border-color: var(--color-present) !important;
+  box-shadow: 0 4px 0 var(--color-present-dark) !important;
   color: #ffffff !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .key.absent {
   background-color: var(--color-absent) !important;
-  /* Slate */
   border-color: var(--color-absent) !important;
-  box-shadow: 0 4px 0 var(--color-absent) !important;
+  box-shadow: 0 4px 0 var(--color-shadow) !important;
   color: #ffffff !important;
+  opacity: 0.6;
 }
 
 .mode-selector {
