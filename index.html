@@ -131,7 +131,13 @@
 
         <!-- Big Stats -->
         <div>
-          <div class="stats-header">Statistics (<span id="stats-mode-label">5</span> Letters)</div>
+          <div class="stats-header">
+            Statistics
+            <div class="mode-selector stats-mode-selector">
+              <button class="mode-btn stats-mode-btn active" data-mode="5">5</button>
+              <button class="mode-btn stats-mode-btn" data-mode="6">6</button>
+            </div>
+          </div>
           <div class="stats-grid">
             <div class="stat-box">
               <div class="stat-val" id="stat-played">0</div>

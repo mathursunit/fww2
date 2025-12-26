@@ -86,6 +86,21 @@ function getStats() {
     const s = localStorage.getItem(getStatsKey());
     return s ? { ...defaultStats, ...JSON.parse(s) } : defaultStats;
   } catch {
+  }
+}
+
+function getStatsForMode(mode) {
+  const defaultStats = {
+    played: 0,
+    won: 0,
+    currentStreak: 0,
+    maxStreak: 0,
+    guesses: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, fail: 0 }
+  };
+  try {
+    const s = localStorage.getItem(`${STATS_KEY_BASE}_${mode}`);
+    return s ? { ...defaultStats, ...JSON.parse(s) } : defaultStats;
+  } catch {
     return defaultStats;
   }
 }
@@ -109,10 +124,14 @@ function updateStats(won, guessCount) {
   saveStats(stats);
 }
 
-function showStatsModal() {
-  const stats = getStats();
+function showStatsModal(mode = currentWordLength) {
+  const stats = getStatsForMode(mode);
 
-  document.getElementById('stats-mode-label').textContent = currentWordLength;
+  // Update Stats Toggle UI
+  document.querySelectorAll('.stats-mode-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.mode) === mode);
+  });
+
   document.getElementById('stat-played').textContent = stats.played;
   const winPct = stats.played > 0 ? Math.round((stats.won / stats.played) * 100) : 0;
   document.getElementById('stat-win').textContent = winPct;
@@ -141,7 +160,8 @@ function showStatsModal() {
 
     const bar = document.createElement('div');
     bar.className = 'graph-bar';
-    if (gameStatus === 'WON' && currentRow + 1 === i) {
+    // Highlight if looking at current mode and just won
+    if (mode === currentWordLength && gameStatus === 'WON' && currentRow + 1 === i) {
       bar.classList.add('highlight');
     }
     bar.style.width = `${widthPct}%`;
@@ -246,12 +266,19 @@ const closeBtn = document.querySelector('.close-btn');
 
 if (statsBtn && modal) {
   statsBtn.addEventListener('click', () => {
-    showStatsModal();
+    showStatsModal(currentWordLength);
     modal.classList.add('open');
   });
   closeBtn.addEventListener('click', () => modal.classList.remove('open'));
   modal.addEventListener('click', (e) => {
     if (e.target === modal) modal.classList.remove('open');
+  });
+
+  // Stats Mode Toggles
+  document.querySelectorAll('.stats-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      showStatsModal(parseInt(btn.dataset.mode));
+    });
   });
 }
 
