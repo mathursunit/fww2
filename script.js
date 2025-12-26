@@ -1,7 +1,65 @@
-// script.js with toast notification and flip animation
+// script.js with toast notification, flip animation, and multi-mode support
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const EPOCH_MS = Date.UTC(2025, 0, 1);
+
+let currentWordLength = 5;
+const WORDS_DATA = { 5: [], 6: [] };
+let WORDS = []; // Active list alias
+let solution = '';
+let currentRow = 0, currentCol = 0;
+let gameStatus = 'IN_PROGRESS'; // 'IN_PROGRESS', 'WON', 'LOST'
+const rows = [];
+const GAME_STATE_KEY_BASE = 'fww_gamestate';
+const STATS_KEY_BASE = 'fww_stats';
+
+// Hidden reset variables
+let logoTapCount = 0;
+let logoTapTimer = null;
+
+// Initialize
+Promise.all([
+  fetch('words5.txt').then(r => r.text()),
+  fetch('words6.txt').then(r => r.text())
+]).then(([txt5, txt6]) => {
+  WORDS_DATA[5] = txt5.split('\n').map(w => w.trim().toUpperCase()).filter(Boolean);
+  WORDS_DATA[6] = txt6.split('\n').map(w => w.trim().toUpperCase()).filter(Boolean);
+
+  // Initialize mode buttons
+  setupModeButtons();
+
+  // Start with default or saved mode? Default 5 for now.
+  startGame();
+});
+
+function getStatsKey() {
+  return `${STATS_KEY_BASE}_${currentWordLength}`;
+}
+
+function getGameStateKey() {
+  return `${GAME_STATE_KEY_BASE}_${currentWordLength}`;
+}
+
+function setupModeButtons() {
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = parseInt(btn.dataset.mode);
+      if (mode !== currentWordLength) {
+        switchMode(mode);
+      }
+    });
+  });
+}
+
+function switchMode(mode) {
+  currentWordLength = mode;
+  // Update UI
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.mode) === mode);
+  });
+  // Restart game
+  startGame();
+}
 
 function showToast(message) {
   const container = document.getElementById('toast-container');
@@ -16,28 +74,6 @@ function showToast(message) {
   }, 2000);
 }
 
-
-let WORDS = [];
-let solution = '';
-let currentRow = 0, currentCol = 0;
-let gameStatus = 'IN_PROGRESS'; // 'IN_PROGRESS', 'WON', 'LOST'
-const rows = [];
-const GAME_STATE_KEY = 'fww_gamestate';
-const STATS_KEY = 'fww_stats';
-
-// Hidden reset variables
-
-// Hidden reset variables
-let logoTapCount = 0;
-let logoTapTimer = null;
-
-fetch('words.txt')
-  .then(r => r.text())
-  .then(txt => {
-    WORDS = txt.split('\n').map(w => w.trim().toUpperCase()).filter(Boolean);
-    startGame();
-  });
-
 function getStats() {
   const defaultStats = {
     played: 0,
@@ -47,7 +83,7 @@ function getStats() {
     guesses: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, fail: 0 }
   };
   try {
-    const s = localStorage.getItem(STATS_KEY);
+    const s = localStorage.getItem(getStatsKey());
     return s ? { ...defaultStats, ...JSON.parse(s) } : defaultStats;
   } catch {
     return defaultStats;
@@ -55,7 +91,7 @@ function getStats() {
 }
 
 function saveStats(stats) {
-  localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+  localStorage.setItem(getStatsKey(), JSON.stringify(stats));
 }
 
 function updateStats(won, guessCount) {
@@ -125,92 +161,115 @@ function getDailyIndex() {
   return ((days % WORDS.length) + WORDS.length) % WORDS.length;
 }
 
-function showToast(message) {
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.textContent = message.toUpperCase();
-  container.appendChild(toast);
-  requestAnimationFrame(() => {
-    toast.classList.add('show');
-  });
-  setTimeout(() => {
-    toast.classList.remove('show');
-    toast.addEventListener('transitionend', () => toast.remove(), { once: true });
-  }, 2000);
-}
-
 function startGame() {
+  WORDS = WORDS_DATA[currentWordLength];
   const dailyIndex = getDailyIndex();
   solution = WORDS[dailyIndex];
 
-  document.body.focus();
-  document.querySelectorAll('.row').forEach(r => rows.push(Array.from(r.children)));
+  // Rebuild Grid
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  rows.length = 0;
 
-  // Keyboard events
-  window.addEventListener('keydown', onKey);
-  document.querySelectorAll('#keyboard .key').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const k = btn.dataset.key || btn.textContent;
-      onKey({ key: k });
-    });
+  for (let i = 0; i < 6; i++) {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'row';
+    const rowTiles = [];
+    for (let j = 0; j < currentWordLength; j++) {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      rowDiv.appendChild(tile);
+      rowTiles.push(tile);
+    }
+    grid.appendChild(rowDiv);
+    rows.push(rowTiles);
+  }
+
+  // Reset State
+  currentRow = 0;
+  currentCol = 0;
+  gameStatus = 'IN_PROGRESS';
+
+  // Clear keyboard colors
+  document.querySelectorAll('.key').forEach(k => {
+    k.classList.remove('correct', 'present', 'absent');
   });
 
-  // Setup Hidden Reset on Logo
-  const logo = document.querySelector('.logo');
-  if (logo) {
-    logo.addEventListener('click', () => {
-      logoTapCount++;
-      clearTimeout(logoTapTimer);
+  document.body.focus();
 
-      if (logoTapCount >= 5) {
-        // Reset Game
-        localStorage.removeItem(GAME_STATE_KEY);
-        showToast('Game Reset!');
-        setTimeout(() => window.location.reload(), 1000);
-        logoTapCount = 0;
-      } else {
-        logoTapTimer = setTimeout(() => {
-          logoTapCount = 0;
-        }, 1000); // 1 second to continue tapping
-      }
-    });
-  }
-
-  // Stats UI
-  const statsBtn = document.getElementById('stats-btn');
-  const modal = document.getElementById('stats-modal');
-  const closeBtn = document.querySelector('.close-btn');
-
-  if (statsBtn && modal) {
-    statsBtn.addEventListener('click', () => {
-      showStatsModal();
-      modal.classList.add('open');
-    });
-    closeBtn.addEventListener('click', () => modal.classList.remove('open'));
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.classList.remove('open');
-    });
-  }
+  // Keyboard events (remove old listeners to avoid duplicates? actually listeners on window/keys stack if not careful)
+  // Best to only add them ONCE. But startGame is called on switchMode.
+  // I should move listener setup outside or check if added. 
+  // Easy way: clone node or use a flag. 
+  // Actually, 'onKey' handles the logic. The listeners are cheap. 
+  // But adding multiple click listeners to keys IS bad. They will fire multiple times.
+  // I'll move listener setup to the bottom IIFE or global scope, similar to mode buttons.
 
   loadGame(dailyIndex);
 }
 
+// One-time Setup for Input
+window.addEventListener('keydown', onKey);
+document.querySelectorAll('#keyboard .key').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const k = btn.dataset.key || btn.textContent;
+    onKey({ key: k });
+  });
+});
+
+// Setup Hidden Reset on Logo (One time)
+const logo = document.querySelector('.logo');
+if (logo) {
+  logo.addEventListener('click', () => {
+    logoTapCount++;
+    clearTimeout(logoTapTimer);
+
+    if (logoTapCount >= 5) {
+      // Reset Game
+      localStorage.removeItem(getGameStateKey());
+      showToast('Game Reset!');
+      setTimeout(() => window.location.reload(), 1000);
+      logoTapCount = 0;
+    } else {
+      logoTapTimer = setTimeout(() => {
+        logoTapCount = 0;
+      }, 1000);
+    }
+  });
+}
+
+// Stats UI (One time)
+const statsBtn = document.getElementById('stats-btn');
+const modal = document.getElementById('stats-modal');
+const closeBtn = document.querySelector('.close-btn');
+
+if (statsBtn && modal) {
+  statsBtn.addEventListener('click', () => {
+    showStatsModal();
+    modal.classList.add('open');
+  });
+  closeBtn.addEventListener('click', () => modal.classList.remove('open'));
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.classList.remove('open');
+  });
+}
+
+
 function saveGame() {
   const guesses = rows
     .map(row => row.map(tile => tile.textContent).join(''))
-    .filter(word => word.length === 5); // Only complete guesses
+    .filter(word => word.length === currentWordLength); // Only complete guesses
 
   const state = {
     dayIndex: getDailyIndex(),
     guesses: guesses,
     gameStatus: gameStatus
   };
-  localStorage.setItem(GAME_STATE_KEY, JSON.stringify(state));
+  localStorage.setItem(getGameStateKey(), JSON.stringify(state));
 }
 
 function loadGame(currentDayIndex) {
-  const savedJSON = localStorage.getItem(GAME_STATE_KEY);
+  const savedJSON = localStorage.getItem(getGameStateKey());
   if (!savedJSON) return;
 
   try {
@@ -218,7 +277,7 @@ function loadGame(currentDayIndex) {
 
     // Check if it's the same day
     if (state.dayIndex !== currentDayIndex) {
-      localStorage.removeItem(GAME_STATE_KEY);
+      localStorage.removeItem(getGameStateKey());
       return;
     }
 
@@ -226,7 +285,9 @@ function loadGame(currentDayIndex) {
     state.guesses.forEach((guess) => {
       // Set letters
       guess.split('').forEach((letter, i) => {
-        rows[currentRow][i].textContent = letter;
+        if (rows[currentRow] && rows[currentRow][i]) {
+          rows[currentRow][i].textContent = letter;
+        }
       });
 
       // Apply colors (Instant, no animation)
@@ -251,7 +312,7 @@ function loadGame(currentDayIndex) {
 
   } catch (e) {
     console.warn('Failed to load game state', e);
-    localStorage.removeItem(GAME_STATE_KEY);
+    localStorage.removeItem(getGameStateKey());
   }
 }
 
@@ -259,7 +320,7 @@ function evaluateGuess(guess) {
   const solArr = solution.split('');
   const solCount = {};
   solArr.forEach(l => solCount[l] = (solCount[l] || 0) + 1);
-  const states = Array(5).fill('absent');
+  const states = Array(currentWordLength).fill('absent');
 
   // First pass: correct
   guess.split('').forEach((l, i) => {
@@ -299,12 +360,14 @@ function onKey(e) {
   if (gameStatus !== 'IN_PROGRESS' || currentRow >= 6) return;
   if (key === 'ENTER') return checkGuess();
   if (key === 'BACKSPACE') return deleteLetter();
-  if (/^[A-Z]$/.test(key) && currentCol < 5) addLetter(key);
+  if (/^[A-Z]$/.test(key) && currentCol < currentWordLength) addLetter(key);
 }
 
 function addLetter(letter) {
-  rows[currentRow][currentCol].textContent = letter;
-  currentCol++;
+  if (rows[currentRow] && rows[currentRow][currentCol]) {
+    rows[currentRow][currentCol].textContent = letter;
+    currentCol++;
+  }
 }
 
 function deleteLetter() {
@@ -326,7 +389,7 @@ function findKeyBtn(ch) {
 
 
 function checkGuess() {
-  if (currentCol < 5) {
+  if (currentCol < currentWordLength) {
     showToast('Not enough letters');
     return;
   }
@@ -384,7 +447,7 @@ function checkGuess() {
       }
       saveGame();
     }
-  }, 5 * 300 + 100);
+  }, currentWordLength * 300 + 100);
 }
 
 
