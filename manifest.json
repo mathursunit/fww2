@@ -1,7 +1,7 @@
 {
   "name": "SunSar - FWW",
   "short_name": "SunSar - FWW",
-  "start_url": "/",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#6aaa64",
