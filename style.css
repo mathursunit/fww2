@@ -278,13 +278,33 @@ input:checked+.slider:before {
   flex: none;
   /* Don't stretch on desktop */
   width: 100%;
-  max-width: 500px;
+  max-width: 32rem;
   overflow-y: auto;
   overflow-x: hidden;
   /* Prevent horiz scrollbar */
   padding-top: 5px;
   /* Minimal top padding */
   /* Consistent top margin */
+}
+
+@media (min-width: 800px) {
+  :root {
+    font-size: 18px;
+  }
+
+  .game-container {
+    max-width: 36rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  :root {
+    font-size: 20px;
+  }
+
+  .game-container {
+    max-width: 40rem;
+  }
 }
 
 h1 {
@@ -540,8 +560,8 @@ h1 {
 
 .key {
   flex: 1;
-  height: 46px;
-  /* Shorter for vertical space */
+  height: 2.875rem;
+  /* 46px at 16px root */
   border: none;
   background-color: var(--color-key-bg);
   color: var(--color-key-text);
@@ -648,7 +668,7 @@ h1 {
 
 .game-header {
   width: 100%;
-  max-width: 500px;
+  max-width: 32rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -982,8 +1002,8 @@ h1 {
   padding-top: 3rem;
   /* Space for close button */
   border-radius: 8px;
-  max-width: 90%;
-  width: 500px;
+  max-width: 95%;
+  width: 32rem;
   max-height: 85vh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
