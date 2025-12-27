@@ -76,20 +76,29 @@ h1,
 /* Light Mode: Drifting Clouds */
 .cloud {
   position: absolute;
-  background: white;
+  background: #bae6fd;
+  /* Sky blue */
   border-radius: 50%;
-  opacity: 0.6;
-  filter: blur(20px);
-  animation: drift linear infinite;
+  opacity: 0.35;
+  filter: blur(40px);
+  animation: flow linear infinite;
 }
 
-@keyframes drift {
-  from {
-    transform: translateX(-150px);
+@keyframes flow {
+  0% {
+    transform: translateX(-200px) translateY(0px);
   }
 
-  to {
-    transform: translateX(calc(100vw + 150px));
+  33% {
+    transform: translateX(33vw) translateY(40px);
+  }
+
+  66% {
+    transform: translateX(66vw) translateY(-30px);
+  }
+
+  100% {
+    transform: translateX(calc(100vw + 200px)) translateY(0px);
   }
 }
 
