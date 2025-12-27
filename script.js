@@ -338,8 +338,11 @@ function useHint() {
   showToast(`Hint: The letter at pos ${hintPos + 1} is ${letter}`);
 
   // Auto-fill in current row
-  rows[currentRow][hintPos].textContent = letter;
-  rows[currentRow][hintPos].classList.add('hinted');
+  const tile = rows[currentRow][hintPos];
+  tile.textContent = letter;
+  tile.classList.add('hinted', 'correct');
+  updateKeyboard(letter, 'correct');
+
   HapticEngine.vibrate(50);
   SoundEngine.playDing();
 
@@ -753,7 +756,8 @@ function loadGame(currentDayIndex) {
       const tile = rows[currentRow][state.hintedPos];
       if (tile) {
         tile.textContent = state.hintedLetter;
-        tile.classList.add('hinted');
+        tile.classList.add('hinted', 'correct');
+        updateKeyboard(state.hintedLetter, 'correct');
       }
     }
 
