@@ -295,6 +295,15 @@ input:checked+.slider:before {
   .game-container {
     max-width: 36rem;
   }
+
+  .tile {
+    max-width: 3.8rem;
+    max-height: 3.8rem;
+  }
+
+  #keyboard {
+    max-width: 34rem;
+  }
 }
 
 @media (min-width: 1200px) {
@@ -303,7 +312,17 @@ input:checked+.slider:before {
   }
 
   .game-container {
-    max-width: 40rem;
+    max-width: 42rem;
+  }
+
+  .tile {
+    max-width: 4.5rem;
+    max-height: 4.5rem;
+    font-size: 1.8rem;
+  }
+
+  #keyboard {
+    max-width: 38rem;
   }
 }
 
@@ -510,7 +529,8 @@ h1 {
   margin: 0.5rem 0;
   /* Reduced margin */
   width: 100%;
-  max-width: 650px;
+  max-width: 32rem;
+  /* Was 650px */
   padding: 0 4px;
   box-sizing: border-box;
 }
