@@ -216,8 +216,13 @@ const AuthManager = {
   async googleLogin() {
     try {
       const provider = new firebase.auth.GoogleAuthProvider();
+      // Force account selection
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
       await this.auth.signInWithPopup(provider);
       showToast("Google log in successful!");
+      document.getElementById('auth-modal').classList.remove('open');
     } catch (e) {
       showToast(e.message);
     }
@@ -810,16 +815,35 @@ if (authBtn && authModal) {
   authModal.querySelector('.close-btn').addEventListener('click', () => authModal.classList.remove('open'));
   authModal.addEventListener('click', (e) => { if (e.target === authModal) authModal.classList.remove('open'); });
 
-  document.getElementById('login-btn').addEventListener('click', () => {
+  // Tab switching
+  const tabs = authModal.querySelectorAll('.auth-tab');
+  const submitBtn = document.getElementById('auth-submit-btn');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const isLogin = tab.dataset.tab === 'login';
+      submitBtn.textContent = isLogin ? 'Login' : 'Create Account';
+    });
+  });
+
+  submitBtn.addEventListener('click', () => {
+    const activeTab = authModal.querySelector('.auth-tab.active').dataset.tab;
     const email = document.getElementById('auth-email').value;
     const pass = document.getElementById('auth-password').value;
-    AuthManager.login(email, pass);
+
+    if (activeTab === 'login') {
+      AuthManager.login(email, pass).then(() => {
+        if (AuthManager.user) authModal.classList.remove('open');
+      });
+    } else {
+      AuthManager.signup(email, pass).then(() => {
+        if (AuthManager.user) authModal.classList.remove('open');
+      });
+    }
   });
-  document.getElementById('signup-btn').addEventListener('click', () => {
-    const email = document.getElementById('auth-email').value;
-    const pass = document.getElementById('auth-password').value;
-    AuthManager.signup(email, pass);
-  });
+
   document.getElementById('google-login-btn').addEventListener('click', () => AuthManager.googleLogin());
   document.getElementById('logout-btn').addEventListener('click', () => AuthManager.logout());
 }
