@@ -14,6 +14,7 @@ const GAME_STATE_KEY_BASE = 'fww_gamestate';
 const STATS_KEY_BASE = 'fww_stats';
 
 // Settings & State
+let isInitializing = false;
 let isGameLoading = false;
 let isSyncing = false;
 const settings = {
@@ -158,20 +159,23 @@ const AuthManager = {
           }
         }
       }
-      // Sync Current Game State
-      const key = getGameStateKey(activeDayIndex, currentWordLength);
-      const cloudState = await this.fetchGameStateFromCloud(activeDayIndex, currentWordLength);
-      if (cloudState) {
-        const localStateStr = localStorage.getItem(key);
-        let localState = null;
-        try { localState = localStateStr ? JSON.parse(localStateStr) : null; } catch (e) { }
+      // Sync Current Game State (Pull today's progress for ALL modes)
+      for (let m of [4, 5, 6]) {
+        const key = getGameStateKey(activeDayIndex, m);
+        const cloudState = await this.fetchGameStateFromCloud(activeDayIndex, m);
+        if (cloudState) {
+          const localStateStr = localStorage.getItem(key);
+          let localState = null;
+          try { localState = localStateStr ? JSON.parse(localStateStr) : null; } catch (e) { }
 
-        const cloudIsAhead = !localState ||
-          (cloudState.guesses.length > localState.guesses.length) ||
-          (cloudState.gameStatus !== 'IN_PROGRESS' && localState.gameStatus === 'IN_PROGRESS');
+          const cloudIsAhead = !localState ||
+            (cloudState.guesses.length > localState.guesses.length) ||
+            (cloudState.gameStatus !== 'IN_PROGRESS' && localState.gameStatus === 'IN_PROGRESS');
 
-        if (cloudIsAhead) {
-          localStorage.setItem(key, JSON.stringify(cloudState));
+          if (cloudIsAhead) {
+            console.log(`Cloud state is ahead for mode ${m}. Updating local storage.`);
+            localStorage.setItem(key, JSON.stringify(cloudState));
+          }
         }
       }
 
@@ -716,11 +720,25 @@ function showStatsModal(mode = currentWordLength) {
 }
 
 async function startGame(dayIdx = null) {
+  if (isInitializing) return;
+  isInitializing = true;
+
   // Use current day if none provided
   if (dayIdx !== null) {
     activeDayIndex = dayIdx;
   } else {
     activeDayIndex = getDailyIndex();
+  }
+
+  // Ensure words are loaded (wait if necessary)
+  if (WORDS_SOLUTIONS.length === 0) {
+    await loadSecureWords(currentWordLength);
+  }
+  // Double check
+  if (WORDS_SOLUTIONS.length === 0) {
+    console.error("Words failed to load. Aborting startGame.");
+    isInitializing = false;
+    return;
   }
 
   // Reset active variables
@@ -777,6 +795,7 @@ async function startGame(dayIdx = null) {
 
   document.body.focus();
   await loadGame(activeDayIndex);
+  isInitializing = false;
 }
 
 // One-time Setup for Input
