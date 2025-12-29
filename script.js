@@ -123,10 +123,10 @@ const AuthManager = {
       if (user) {
         if (isSyncing) return;
         isSyncing = true;
-        await this.syncFromCloud();
-        // If we just logged in, reload the game to pull any cloud progress
-        if (loggedInNow) {
-          await startGame(activeDayIndex, true); // Force restart to ensure cloud state is pulled correctly
+        const changed = await this.syncFromCloud();
+        // If we just logged in, or if something changed in the background, reload
+        if (loggedInNow || changed) {
+          await startGame(activeDayIndex, true);
         }
         isSyncing = false;
       }
@@ -134,7 +134,8 @@ const AuthManager = {
   },
 
   async syncFromCloud() {
-    if (!this.user) return;
+    if (!this.user) return false;
+    let anyChanged = false;
     try {
       // Sync Stats
       for (let m of [4, 5, 6]) {
@@ -143,22 +144,18 @@ const AuthManager = {
 
         if (doc.exists) {
           const cloudStats = doc.data();
-          // Merge logic: simpler is "higher played count wins"
-          // If local has more played, upload local to cloud
           if (localStats.played > cloudStats.played) {
             await this.syncStatsToCloud(m, localStats);
           }
-          // If cloud has more played, download cloud to local
           else if (cloudStats.played > localStats.played) {
             localStorage.setItem(`${STATS_KEY_BASE}_${m}`, JSON.stringify(cloudStats));
+            anyChanged = true;
           }
-        } else {
-          // If no cloud stats yet but we have local stats, upload them
-          if (localStats.played > 0) {
-            await this.syncStatsToCloud(m, localStats);
-          }
+        } else if (localStats.played > 0) {
+          await this.syncStatsToCloud(m, localStats);
         }
       }
+
       // Sync Current Game State (Bidirectional today's progress for ALL modes)
       for (let m of [4, 5, 6]) {
         const key = getGameStateKey(activeDayIndex, m);
@@ -175,13 +172,12 @@ const AuthManager = {
           if (cloudIsAhead) {
             console.log(`Cloud state is ahead for mode ${m}. Updating local storage.`);
             localStorage.setItem(key, JSON.stringify(cloudState));
+            anyChanged = true;
           } else if (localState && localState.guesses.length > cloudState.guesses.length) {
-            // Local is ahead, push to cloud
             console.log(`Local state is ahead for mode ${m}. Updating cloud.`);
             await this.syncGameStateToCloudCustom(localState, m);
           }
         } else if (localState && (localState.guesses.length > 0 || localState.gameStatus !== 'IN_PROGRESS')) {
-          // No cloud state, but we have local meaningful state, push it
           console.log(`Pushing local state for mode ${m} to cloud (was missing).`);
           await this.syncGameStateToCloudCustom(localState, m);
         }
@@ -191,8 +187,10 @@ const AuthManager = {
       if (document.getElementById('stats-modal').classList.contains('open')) {
         showStatsModal(currentWordLength);
       }
+      return anyChanged;
     } catch (e) {
       console.error("Cloud sync failed:", e);
+      return false;
     }
   },
 
@@ -379,6 +377,18 @@ const rows = [];
   await loadSecureWords(currentWordLength);
 
   await startGame();
+
+  // Sync when tab is focused
+  window.addEventListener('focus', async () => {
+    if (AuthManager.user && !isSyncing) {
+      isSyncing = true;
+      const changed = await AuthManager.syncFromCloud();
+      if (changed) {
+        await startGame(activeDayIndex, true);
+      }
+      isSyncing = false;
+    }
+  });
 })();
 
 function getStatsKey() {
