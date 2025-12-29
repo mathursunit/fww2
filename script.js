@@ -89,6 +89,147 @@ const HapticEngine = {
   }
 };
 
+// --- Firebase Auth & Sync Manager ---
+const AuthManager = {
+  db: null,
+  auth: null,
+  user: null,
+  isInitialized: false,
+
+  init() {
+    if (typeof firebase === 'undefined') {
+      console.warn("Firebase scripts not loaded or blocked.");
+      return;
+    }
+    try {
+      firebase.initializeApp(window.firebaseConfig);
+      this.auth = firebase.auth();
+      this.db = firebase.firestore();
+      this.isInitialized = true;
+      this.listen();
+    } catch (e) {
+      console.error("Firebase init failed:", e);
+    }
+  },
+
+  listen() {
+    this.auth.onAuthStateChanged(async (user) => {
+      this.user = user;
+      this.updateUI();
+      if (user) {
+        await this.syncFromCloud();
+      }
+    });
+  },
+
+  async syncFromCloud() {
+    if (!this.user) return;
+    try {
+      // Sync Stats
+      for (let m of [4, 5, 6]) {
+        const doc = await this.db.collection('users').doc(this.user.uid).collection('stats').doc(`mode_${m}`).get();
+        if (doc.exists) {
+          const cloudStats = doc.data();
+          const localStats = getStatsForMode(m);
+          // Merge logic: simpler is "cloud wins" if played count is higher
+          if (cloudStats.played > localStats.played) {
+            localStorage.setItem(`${STATS_KEY_BASE}_${m}`, JSON.stringify(cloudStats));
+          }
+        }
+      }
+      // Reload current display
+      if (document.getElementById('stats-modal').classList.contains('open')) {
+        showStatsModal(currentWordLength);
+      }
+    } catch (e) {
+      console.error("Cloud sync failed:", e);
+    }
+  },
+
+  async syncStatsToCloud(mode, stats) {
+    if (!this.user || !this.isInitialized) return;
+    try {
+      await this.db.collection('users').doc(this.user.uid).collection('stats').doc(`mode_${mode}`).set(stats);
+    } catch (e) {
+      console.error("Cloud stats save failed:", e);
+    }
+  },
+
+  async syncGameStateToCloud(state) {
+    if (!this.user || !this.isInitialized) return;
+    try {
+      const key = `state_${state.dayIndex}_m${currentWordLength}`;
+      await this.db.collection('users').doc(this.user.uid).collection('games').doc(key).set(state);
+    } catch (e) {
+      console.error("Cloud state save failed:", e);
+    }
+  },
+
+  async fetchGameStateFromCloud(dayIndex, mode) {
+    if (!this.user || !this.isInitialized) return null;
+    try {
+      const key = `state_${dayIndex}_m${mode}`;
+      const doc = await this.db.collection('users').doc(this.user.uid).collection('games').doc(key).get();
+      return doc.exists ? doc.data() : null;
+    } catch (e) {
+      console.error("Cloud state fetch failed:", e);
+      return null;
+    }
+  },
+
+  updateUI() {
+    const authBtn = document.getElementById('auth-btn');
+    const signedOutView = document.getElementById('auth-signed-out');
+    const signedInView = document.getElementById('auth-signed-in');
+    const emailDisplay = document.getElementById('user-email-display');
+
+    if (this.user) {
+      authBtn.textContent = '👤'; // Could change to avatar or initials
+      signedOutView.style.display = 'none';
+      signedInView.style.display = 'block';
+      emailDisplay.textContent = this.user.email || 'Anonymous User';
+    } else {
+      authBtn.textContent = '👤';
+      signedOutView.style.display = 'block';
+      signedInView.style.display = 'none';
+    }
+  },
+
+  async login(email, password) {
+    try {
+      await this.auth.signInWithEmailAndPassword(email, password);
+      showToast("Logged in successfully!");
+    } catch (e) {
+      showToast(e.message);
+    }
+  },
+
+  async signup(email, password) {
+    try {
+      await this.auth.createUserWithEmailAndPassword(email, password);
+      showToast("Account created!");
+    } catch (e) {
+      showToast(e.message);
+    }
+  },
+
+  async googleLogin() {
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await this.auth.signInWithPopup(provider);
+      showToast("Google log in successful!");
+    } catch (e) {
+      showToast(e.message);
+    }
+  },
+
+  logout() {
+    this.auth.signOut();
+    showToast("Signed out.");
+  }
+};
+AuthManager.init();
+
 
 const WORDS_DATA = {
   4: { hashes: new Set(), solutions: [] },
@@ -178,7 +319,7 @@ const rows = [];
   // Load only the current required words
   await loadSecureWords(currentWordLength);
 
-  startGame();
+  await startGame();
 })();
 
 function getStatsKey() {
@@ -214,7 +355,7 @@ async function switchMode(mode) {
   await loadSecureWords(mode);
 
   // Restart game - persist the currently selected day
-  startGame(activeDayIndex);
+  await startGame(activeDayIndex);
 }
 
 function showToast(message) {
@@ -413,7 +554,7 @@ function openArchive() {
         if (targetMode !== currentWordLength) {
           await switchMode(targetMode);
         }
-        startGame(targetDay);
+        await startGame(targetDay);
         modal.classList.remove('open');
       });
     });
@@ -462,6 +603,7 @@ function getStatsForMode(mode) {
 
 function saveStats(stats) {
   localStorage.setItem(getStatsKey(), JSON.stringify(stats));
+  AuthManager.syncStatsToCloud(currentWordLength, stats);
 }
 
 function updateStats(won, guessCount) {
@@ -530,7 +672,7 @@ function showStatsModal(mode = currentWordLength) {
   }
 }
 
-function startGame(dayIdx = null) {
+async function startGame(dayIdx = null) {
   // Use current day if none provided
   if (dayIdx !== null) {
     activeDayIndex = dayIdx;
@@ -645,7 +787,7 @@ if (hintBtn) {
   hintBtn.addEventListener('click', useHint);
 }
 
-// Help Button Listener
+// Help Modal
 const helpBtn = document.getElementById('help-btn');
 const helpModal = document.getElementById('help-modal');
 if (helpBtn && helpModal) {
@@ -658,6 +800,28 @@ if (helpBtn && helpModal) {
   helpModal.addEventListener('click', (e) => {
     if (e.target === helpModal) helpModal.classList.remove('open');
   });
+}
+
+// Auth Modal
+const authBtn = document.getElementById('auth-btn');
+const authModal = document.getElementById('auth-modal');
+if (authBtn && authModal) {
+  authBtn.addEventListener('click', () => authModal.classList.add('open'));
+  authModal.querySelector('.close-btn').addEventListener('click', () => authModal.classList.remove('open'));
+  authModal.addEventListener('click', (e) => { if (e.target === authModal) authModal.classList.remove('open'); });
+
+  document.getElementById('login-btn').addEventListener('click', () => {
+    const email = document.getElementById('auth-email').value;
+    const pass = document.getElementById('auth-password').value;
+    AuthManager.login(email, pass);
+  });
+  document.getElementById('signup-btn').addEventListener('click', () => {
+    const email = document.getElementById('auth-email').value;
+    const pass = document.getElementById('auth-password').value;
+    AuthManager.signup(email, pass);
+  });
+  document.getElementById('google-login-btn').addEventListener('click', () => AuthManager.googleLogin());
+  document.getElementById('logout-btn').addEventListener('click', () => AuthManager.logout());
 }
 
 // Stats UI (One time)
@@ -709,10 +873,21 @@ function saveGame() {
     hintedPos: hintedPos
   };
   localStorage.setItem(getGameStateKey(), JSON.stringify(state));
+  AuthManager.syncGameStateToCloud(state);
 }
 
-function loadGame(currentDayIndex) {
-  const savedJSON = localStorage.getItem(getGameStateKey());
+async function loadGame(currentDayIndex) {
+  let savedJSON = localStorage.getItem(getGameStateKey());
+
+  // If no local state but logged in, try cloud
+  if (!savedJSON && AuthManager.user) {
+    const cloudState = await AuthManager.fetchGameStateFromCloud(currentDayIndex, currentWordLength);
+    if (cloudState) {
+      savedJSON = JSON.stringify(cloudState);
+      localStorage.setItem(getGameStateKey(), savedJSON);
+    }
+  }
+
   if (!savedJSON) return;
 
   try {
