@@ -15,6 +15,7 @@ const STATS_KEY_BASE = 'fww_stats';
 
 // Settings & State
 let isGameLoading = false;
+let isSyncing = false;
 const settings = {
   theme: localStorage.getItem('fww_theme') || 'dark', // 'light' or 'dark'
   colorblind: localStorage.getItem('fww_colorblind') === 'true',
@@ -119,11 +120,14 @@ const AuthManager = {
       this.user = user;
       this.updateUI();
       if (user) {
+        if (isSyncing) return;
+        isSyncing = true;
         await this.syncFromCloud();
         // If we just logged in, reload the game to pull any cloud progress
         if (loggedInNow) {
           await startGame(activeDayIndex);
         }
+        isSyncing = false;
       }
     });
   },
@@ -155,18 +159,19 @@ const AuthManager = {
         }
       }
       // Sync Current Game State
-      const key = getGameStateKey(); // Current mode/day
+      const key = getGameStateKey(activeDayIndex, currentWordLength);
       const cloudState = await this.fetchGameStateFromCloud(activeDayIndex, currentWordLength);
       if (cloudState) {
         const localStateStr = localStorage.getItem(key);
-        if (!localStateStr) {
+        let localState = null;
+        try { localState = localStateStr ? JSON.parse(localStateStr) : null; } catch (e) { }
+
+        const cloudIsAhead = !localState ||
+          (cloudState.guesses.length > localState.guesses.length) ||
+          (cloudState.gameStatus !== 'IN_PROGRESS' && localState.gameStatus === 'IN_PROGRESS');
+
+        if (cloudIsAhead) {
           localStorage.setItem(key, JSON.stringify(cloudState));
-        } else {
-          const localState = JSON.parse(localStateStr);
-          // Simple conflict resolution: cloud wins if further ahead
-          if (cloudState.guesses.length > localState.guesses.length) {
-            localStorage.setItem(key, JSON.stringify(cloudState));
-          }
         }
       }
 
@@ -939,28 +944,47 @@ function saveGame() {
 
 async function loadGame(currentDayIndex) {
   isGameLoading = true;
-  let savedJSON = localStorage.getItem(getGameStateKey());
+  const key = getGameStateKey(currentDayIndex, currentWordLength);
+  let localStateJSON = localStorage.getItem(key);
+  let localState = null;
+  if (localStateJSON) {
+    try { localState = JSON.parse(localStateJSON); } catch (e) { }
+  }
 
-  // If no local state but logged in, try cloud
-  if (!savedJSON && AuthManager.user) {
-    const cloudState = await AuthManager.fetchGameStateFromCloud(currentDayIndex, currentWordLength);
-    if (cloudState) {
-      savedJSON = JSON.stringify(cloudState);
-      localStorage.setItem(getGameStateKey(), savedJSON);
+  // Always try to check cloud if logged in, especially if local is fresh or missing
+  if (AuthManager.user) {
+    try {
+      const cloudState = await AuthManager.fetchGameStateFromCloud(currentDayIndex, currentWordLength);
+      if (cloudState) {
+        // Conflict Resolution:
+        // Use cloud if:
+        // 1. No local state
+        // 2. Cloud has more guesses
+        // 3. Cloud is WON/LOST but local is not
+        const cloudIsAhead = !localState ||
+          (cloudState.guesses.length > localState.guesses.length) ||
+          (cloudState.gameStatus !== 'IN_PROGRESS' && localState.gameStatus === 'IN_PROGRESS');
+
+        if (cloudIsAhead) {
+          console.log(`Cloud state is ahead for mode ${currentWordLength}. Syncing...`);
+          localState = cloudState;
+          localStorage.setItem(key, JSON.stringify(cloudState));
+        }
+      }
+    } catch (e) {
+      console.error("Cloud load failed, falling back to local:", e);
     }
   }
 
-  if (!savedJSON) {
+  if (!localState) {
     isGameLoading = false;
     return;
   }
 
   try {
-    const state = JSON.parse(savedJSON);
-
-    // Check if it's the same day
+    const state = localState;
+    // Safety check: day must match
     if (state.dayIndex !== currentDayIndex) {
-      localStorage.removeItem(getGameStateKey());
       isGameLoading = false;
       return;
     }
