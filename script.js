@@ -14,6 +14,7 @@ const GAME_STATE_KEY_BASE = 'fww_gamestate';
 const STATS_KEY_BASE = 'fww_stats';
 
 // Settings & State
+let isGameLoading = false;
 const settings = {
   theme: localStorage.getItem('fww_theme') || 'dark', // 'light' or 'dark'
   colorblind: localStorage.getItem('fww_colorblind') === 'true',
@@ -114,10 +115,15 @@ const AuthManager = {
 
   listen() {
     this.auth.onAuthStateChanged(async (user) => {
+      const loggedInNow = !this.user && user;
       this.user = user;
       this.updateUI();
       if (user) {
         await this.syncFromCloud();
+        // If we just logged in, reload the game to pull any cloud progress
+        if (loggedInNow) {
+          await startGame(activeDayIndex);
+        }
       }
     });
   },
@@ -148,6 +154,22 @@ const AuthManager = {
           }
         }
       }
+      // Sync Current Game State
+      const key = getGameStateKey(); // Current mode/day
+      const cloudState = await this.fetchGameStateFromCloud(activeDayIndex, currentWordLength);
+      if (cloudState) {
+        const localStateStr = localStorage.getItem(key);
+        if (!localStateStr) {
+          localStorage.setItem(key, JSON.stringify(cloudState));
+        } else {
+          const localState = JSON.parse(localStateStr);
+          // Simple conflict resolution: cloud wins if further ahead
+          if (cloudState.guesses.length > localState.guesses.length) {
+            localStorage.setItem(key, JSON.stringify(cloudState));
+          }
+        }
+      }
+
       // Reload current display
       if (document.getElementById('stats-modal').classList.contains('open')) {
         showStatsModal(currentWordLength);
@@ -749,8 +771,7 @@ async function startGame(dayIdx = null) {
   });
 
   document.body.focus();
-
-  loadGame(activeDayIndex);
+  await loadGame(activeDayIndex);
 }
 
 // One-time Setup for Input
@@ -846,11 +867,15 @@ if (authBtn && authModal) {
 
     if (activeTab === 'login') {
       AuthManager.login(email, pass).then(() => {
-        if (AuthManager.user) authModal.classList.remove('open');
+        if (AuthManager.user) {
+          authModal.classList.remove('open');
+        }
       });
     } else {
       AuthManager.signup(email, pass).then(() => {
-        if (AuthManager.user) authModal.classList.remove('open');
+        if (AuthManager.user) {
+          authModal.classList.remove('open');
+        }
       });
     }
   });
@@ -884,6 +909,7 @@ if (statsBtn && modal) {
 
 
 function saveGame() {
+  if (isGameLoading) return; // Don't save while we are trying to load
   const guesses = rows
     .map(row => row.map(tile => tile.textContent).join(''))
     .filter(word => word.length === currentWordLength); // Only complete guesses
@@ -912,6 +938,7 @@ function saveGame() {
 }
 
 async function loadGame(currentDayIndex) {
+  isGameLoading = true;
   let savedJSON = localStorage.getItem(getGameStateKey());
 
   // If no local state but logged in, try cloud
@@ -923,7 +950,10 @@ async function loadGame(currentDayIndex) {
     }
   }
 
-  if (!savedJSON) return;
+  if (!savedJSON) {
+    isGameLoading = false;
+    return;
+  }
 
   try {
     const state = JSON.parse(savedJSON);
@@ -931,6 +961,7 @@ async function loadGame(currentDayIndex) {
     // Check if it's the same day
     if (state.dayIndex !== currentDayIndex) {
       localStorage.removeItem(getGameStateKey());
+      isGameLoading = false;
       return;
     }
 
@@ -971,7 +1002,7 @@ async function loadGame(currentDayIndex) {
       }
     }
 
-    // Sync cursor to avoid landing on hint or overwriting
+    // Sync cursor
     while (currentCol < currentWordLength && rows[currentRow] && rows[currentRow][currentCol].classList.contains('hinted')) {
       currentCol++;
     }
@@ -982,9 +1013,11 @@ async function loadGame(currentDayIndex) {
       }
     }
 
+    isGameLoading = false;
   } catch (e) {
     console.warn('Failed to load game state', e);
     localStorage.removeItem(getGameStateKey());
+    isGameLoading = false;
   }
 }
 
