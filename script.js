@@ -128,12 +128,23 @@ const AuthManager = {
       // Sync Stats
       for (let m of [4, 5, 6]) {
         const doc = await this.db.collection('users').doc(this.user.uid).collection('stats').doc(`mode_${m}`).get();
+        const localStats = getStatsForMode(m);
+
         if (doc.exists) {
           const cloudStats = doc.data();
-          const localStats = getStatsForMode(m);
-          // Merge logic: simpler is "cloud wins" if played count is higher
-          if (cloudStats.played > localStats.played) {
+          // Merge logic: simpler is "higher played count wins"
+          // If local has more played, upload local to cloud
+          if (localStats.played > cloudStats.played) {
+            await this.syncStatsToCloud(m, localStats);
+          }
+          // If cloud has more played, download cloud to local
+          else if (cloudStats.played > localStats.played) {
             localStorage.setItem(`${STATS_KEY_BASE}_${m}`, JSON.stringify(cloudStats));
+          }
+        } else {
+          // If no cloud stats yet but we have local stats, upload them
+          if (localStats.played > 0) {
+            await this.syncStatsToCloud(m, localStats);
           }
         }
       }
@@ -515,7 +526,7 @@ function openArchive() {
   for (let i = 0; i < 14; i++) {
     const day = today - i;
     const date = new Date(EPOCH_MS + day * MS_PER_DAY);
-    const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
     const isCurrentDay = (day === activeDayIndex);
 
@@ -697,7 +708,7 @@ async function startGame(dayIdx = null) {
   const dateEl = document.getElementById('game-date');
   if (dateEl) {
     const puzzleDate = new Date(EPOCH_MS + activeDayIndex * MS_PER_DAY);
-    dateEl.textContent = puzzleDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    dateEl.textContent = puzzleDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
   }
 
   // Update Hint UI
