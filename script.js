@@ -1329,7 +1329,8 @@ function updateDynamicBackground() {
       bg.appendChild(star);
     }
   } else {
-    // Drifting Clouds
+    // Drifting Clouds - Disabled in favor of polished wallpaper
+    /*
     for (let i = 0; i < 6; i++) {
       const cloud = document.createElement('div');
       cloud.className = 'cloud';
@@ -1342,5 +1343,6 @@ function updateDynamicBackground() {
       cloud.style.animationDelay = `${Math.random() * 20}s`;
       bg.appendChild(cloud);
     }
+    */
   }
 }
