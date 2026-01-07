@@ -1315,7 +1315,8 @@ function updateDynamicBackground() {
   const isDark = document.body.classList.contains('dark-mode');
 
   if (isDark) {
-    // Twinkling Stars
+    // Twinkling Stars - Disabled for wallpaper
+    /*
     for (let i = 0; i < 50; i++) {
       const star = document.createElement('div');
       star.className = 'star';
@@ -1328,6 +1329,7 @@ function updateDynamicBackground() {
       star.style.animationDelay = `${Math.random() * 5}s`;
       bg.appendChild(star);
     }
+    */
   } else {
     // Drifting Clouds - Disabled in favor of polished wallpaper
     /*
