@@ -136,7 +136,10 @@ const VoiceInputManager = {
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     this.recognition = new SpeechRecognition();
-    this.recognition.continuous = true; // Continuous listening
+    // Detect iOS to disable continuous mode (it is buggy on Safari)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    this.recognition.continuous = !isIOS;
     this.recognition.interimResults = false;
     this.recognition.lang = 'en-US';
 
