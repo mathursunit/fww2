@@ -136,7 +136,7 @@ const VoiceInputManager = {
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     this.recognition = new SpeechRecognition();
-    this.recognition.continuous = false; // Single command mode for cleaner input
+    this.recognition.continuous = true; // Continuous listening
     this.recognition.interimResults = false;
     this.recognition.lang = 'en-US';
 
@@ -147,14 +147,21 @@ const VoiceInputManager = {
     };
 
     this.recognition.onend = () => {
+      // Auto-restart if we didn't explicitly stop? 
+      // For now, let's just update UI. Browsers might stop it automatically after silence.
       this.isListening = false;
       this.updateUI(false);
     };
 
     this.recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript.toLowerCase().trim();
-      console.log("Voice input:", transcript);
-      this.processCommand(transcript);
+      // In continuous mode, iterate through new results
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          const transcript = event.results[i][0].transcript.toLowerCase().trim();
+          console.log("Voice input:", transcript);
+          this.processCommand(transcript);
+        }
+      }
     };
 
     this.recognition.onerror = (event) => {

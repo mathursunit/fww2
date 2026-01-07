@@ -1,4 +1,4 @@
-const APP_VERSION = '2.0.23';
+const APP_VERSION = '2.0.24';
 
 if (typeof document !== 'undefined') {
     const badge = document.getElementById('version-badge');
