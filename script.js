@@ -21,11 +21,18 @@ const settings = {
   theme: localStorage.getItem('fww_theme') || 'dark', // 'light' or 'dark'
   colorblind: localStorage.getItem('fww_colorblind') === 'true',
   sound: localStorage.getItem('fww_sound') !== 'false',
+  music: localStorage.getItem('fww_music') === 'true', // Default to OFF to be polite
   haptic: localStorage.getItem('fww_haptic') !== 'false'
 };
 
 const SoundEngine = {
   ctx: null,
+  ambienceGain: null,
+  ambienceNodes: [],
+  harmonyNodes: [],
+  tensionNodes: [],
+  isPlayingAmbience: false,
+
   init() {
     if (this.ctx && this.ctx.state !== 'closed') {
       if (this.ctx.state === 'suspended') this.ctx.resume();
@@ -37,6 +44,8 @@ const SoundEngine = {
       console.warn('AudioContext not supported');
     }
   },
+
+  // ---- SFX ----
   playThump() {
     if (!settings.sound || !this.ctx) return;
     const osc = this.ctx.createOscillator();
@@ -81,6 +90,88 @@ const SoundEngine = {
       osc.start(now + i * 0.12);
       osc.stop(now + i * 0.12 + 0.5);
     });
+  },
+
+  // ---- Ambience ----
+  startAmbience() {
+    if (!settings.music || !this.ctx) return;
+    if (this.isPlayingAmbience) return;
+    this.isPlayingAmbience = true;
+    this.ambienceGain = this.ctx.createGain();
+    this.ambienceGain.gain.setValueAtTime(0.001, this.ctx.currentTime);
+    this.ambienceGain.gain.linearRampToValueAtTime(0.05, this.ctx.currentTime + 3);
+    this.ambienceGain.connect(this.ctx.destination);
+    this.addDrone(130.81, 'sine', 0.5);
+    this.addDrone(196.00, 'sine', 0.3);
+  },
+  stopAmbience() {
+    if (!this.isPlayingAmbience || !this.ambienceGain) return;
+    const now = this.ctx.currentTime;
+    if (this.ambienceGain.gain.cancelScheduledValues) this.ambienceGain.gain.cancelScheduledValues(now);
+    this.ambienceGain.gain.setValueAtTime(this.ambienceGain.gain.value, now);
+    this.ambienceGain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+    setTimeout(() => {
+      this.ambienceNodes.forEach(n => { try { n.stop(); } catch (e) { } });
+      this.harmonyNodes.forEach(n => { try { n.osc.stop(); } catch (e) { } });
+      if (this.tensionNode) { try { this.tensionNode.stop(); } catch (e) { } }
+      this.ambienceNodes = [];
+      this.harmonyNodes = [];
+      this.tensionNode = null;
+      this.isPlayingAmbience = false;
+    }, 1600);
+  },
+  addDrone(freq, type, vol) {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+    gain.gain.value = vol;
+    osc.connect(gain);
+    gain.connect(this.ambienceGain);
+    osc.start();
+    this.ambienceNodes.push(osc);
+  },
+  updateAmbience(greenCount, rowCount) {
+    if (!this.isPlayingAmbience) return;
+    const freqs = [261.63, 329.63, 392.00, 493.88, 523.25];
+    while (this.harmonyNodes.length < greenCount && this.harmonyNodes.length < freqs.length) {
+      this.addHarmonyLayer(freqs[this.harmonyNodes.length]);
+    }
+    if (rowCount >= 5 && greenCount < 2 && !this.tensionNode) {
+      this.addTensionLayer(185.00);
+    }
+  },
+  addHarmonyLayer(freq) {
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+    gain.gain.setValueAtTime(0, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.06, this.ctx.currentTime + 4);
+    osc.connect(gain);
+    gain.connect(this.ambienceGain);
+    osc.start();
+    this.harmonyNodes.push({ osc, gain });
+  },
+  addTensionLayer(freq) {
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+    gain.gain.setValueAtTime(0, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.03, this.ctx.currentTime + 5);
+    osc.connect(gain);
+    gain.connect(this.ambienceGain);
+    osc.start();
+    osc.start();
+    this.tensionNode = osc;
+  },
+
+  resetAmbience() {
+    if (!this.isPlayingAmbience) return;
+    this.stopAmbience();
+    setTimeout(() => { if (settings.music) this.startAmbience(); }, 1700);
   }
 };
 
@@ -668,6 +759,22 @@ function setupSettings() {
     }
   });
 
+  // Music Toggle
+  const musicToggle = document.getElementById('music-toggle');
+  if (musicToggle) {
+    musicToggle.checked = settings.music;
+    musicToggle.addEventListener('change', () => {
+      settings.music = musicToggle.checked;
+      localStorage.setItem('fww_music', settings.music);
+      if (settings.music) {
+        SoundEngine.init();
+        SoundEngine.startAmbience();
+      } else {
+        SoundEngine.stopAmbience();
+      }
+    });
+  }
+
   hapticToggle.addEventListener('change', () => {
     settings.haptic = hapticToggle.checked;
     localStorage.setItem('fww_haptic', settings.haptic);
@@ -906,6 +1013,13 @@ function showStatsModal(mode = currentWordLength) {
 }
 
 async function startGame(dayIdx = null, force = false) {
+  if (isGameLoading && !force) return;
+  isGameLoading = true;
+
+  if (settings.music) {
+    SoundEngine.init(); // Ensure context allowed
+    SoundEngine.resetAmbience();
+  }
   if (isInitializing && !force) return;
   isInitializing = true;
 
@@ -1359,6 +1473,7 @@ function findKeyBtn(ch) {
 
 function checkGuess() {
   if (isSubmitting || gameStatus !== 'IN_PROGRESS') return;
+  let correctCountForAudio = 0;
 
   const guess = rows[currentRow].map(t => t.textContent).join('');
   if (guess.length < currentWordLength) {
@@ -1392,6 +1507,7 @@ function checkGuess() {
         if (state === 'correct') {
           SoundEngine.playDing();
           HapticEngine.vibrate(30);
+          correctCountForAudio++; // Track greens
         } else {
           HapticEngine.vibrate(15);
         }
@@ -1407,6 +1523,7 @@ function checkGuess() {
       updateStats(true, currentRow + 1); // 1-based guess count
       showToast('Great');
       SoundEngine.playWin();
+      SoundEngine.updateAmbience(5, currentRow); // Full resolve
       HapticEngine.vibrate([100, 30, 200, 50, 500]);
 
       setTimeout(() => {
@@ -1429,6 +1546,7 @@ function checkGuess() {
       if (currentRow === 6) {
         gameStatus = 'LOST';
         showToast(`The word was ${solution} `);
+        SoundEngine.stopAmbience(); // Silence on loss
         updateStats(false, 6);
         setTimeout(() => {
           showStatsModal();
@@ -1436,6 +1554,8 @@ function checkGuess() {
         }, 1500);
       }
       saveGame();
+      // Update ambience based on progress (Greens)
+      SoundEngine.updateAmbience(correctCountForAudio, currentRow + 1);
     }
     isSubmitting = false;
   }, currentWordLength * 400 + 400); // Increased buffer to ensure all flips finish
