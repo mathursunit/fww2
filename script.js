@@ -92,6 +92,157 @@ const HapticEngine = {
   }
 };
 
+const VoiceInputManager = {
+  recognition: null,
+  isListening: false,
+  commands: {
+    'enter': 'ENTER', 'submit': 'ENTER', 'go': 'ENTER',
+    'delete': 'BACKSPACE', 'backspace': 'BACKSPACE', 'back': 'BACKSPACE', 'erase': 'BACKSPACE',
+    'clear': 'CLEAR', 'reset': 'CLEAR',
+    'alpha': 'A', 'apple': 'A',
+    'bravo': 'B', 'boy': 'B', 'ball': 'B',
+    'charlie': 'C', 'cat': 'C',
+    'delta': 'D', 'dog': 'D',
+    'echo': 'E', 'elephant': 'E',
+    'foxtrot': 'F', 'fish': 'F',
+    'golf': 'G', 'girl': 'G',
+    'hotel': 'H', 'house': 'H',
+    'india': 'I', 'ice': 'I',
+    'juliett': 'J', 'juliet': 'J', 'jam': 'J',
+    'kilo': 'K', 'kite': 'K',
+    'lima': 'L', 'lion': 'L',
+    'mike': 'M', 'man': 'M', 'mom': 'M',
+    'november': 'N', 'no': 'N',
+    'oscar': 'O', 'orange': 'O',
+    'papa': 'P', 'paul': 'P',
+    'quebec': 'Q', 'queen': 'Q',
+    'romeo': 'R', 'rat': 'R',
+    'sierra': 'S', 'sun': 'S', 'snake': 'S',
+    'tango': 'T', 'tomcat': 'T',
+    'uniform': 'U', 'umbrella': 'U',
+    'victor': 'V', 'van': 'V',
+    'whiskey': 'W', 'water': 'W',
+    'x-ray': 'X', 'xray': 'X', 'xylophone': 'X',
+    'yankee': 'Y', 'yellow': 'Y', 'yes': 'Y',
+    'zulu': 'Z', 'zebra': 'Z'
+  },
+
+  init() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      const btn = document.getElementById('mic-btn');
+      if (btn) btn.style.display = 'none';
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    this.recognition = new SpeechRecognition();
+    this.recognition.continuous = false; // Single command mode for cleaner input
+    this.recognition.interimResults = false;
+    this.recognition.lang = 'en-US';
+
+    this.recognition.onstart = () => {
+      this.isListening = true;
+      this.updateUI(true);
+      showToast("Listening...");
+    };
+
+    this.recognition.onend = () => {
+      this.isListening = false;
+      this.updateUI(false);
+    };
+
+    this.recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript.toLowerCase().trim();
+      console.log("Voice input:", transcript);
+      this.processCommand(transcript);
+    };
+
+    this.recognition.onerror = (event) => {
+      console.error("Speech recognition error", event.error);
+      if (event.error === 'not-allowed') {
+        showToast("Mic permission denied");
+      }
+      this.isListening = false;
+      this.updateUI(false);
+    };
+
+    // Attach listener
+    const btn = document.getElementById('mic-btn');
+    if (btn) {
+      btn.addEventListener('click', (e) => {
+        // Prevent focus loss from keyboard interaction issues
+        e.preventDefault();
+        this.toggle();
+      });
+    }
+  },
+
+  toggle() {
+    if (this.isListening) {
+      this.recognition.stop();
+    } else {
+      try {
+        this.recognition.start();
+      } catch (e) {
+        console.warn("Speech start failed", e);
+      }
+    }
+  },
+
+  updateUI(listening) {
+    const btn = document.getElementById('mic-btn');
+    if (btn) {
+      if (listening) {
+        btn.classList.add('listening');
+        btn.textContent = '🛑';
+        btn.style.backgroundColor = '#ef4444'; // Red
+      } else {
+        btn.classList.remove('listening');
+        btn.textContent = '🎙️';
+        btn.style.backgroundColor = ''; // Reset
+      }
+    }
+  },
+
+  processCommand(rawText) {
+    // 1. Direct letter match (single char)
+    if (rawText.length === 1 && /[a-z]/.test(rawText)) {
+      handleKey(rawText.toUpperCase());
+      return;
+    }
+
+    // 2. Command or Dictionary match
+    // Check exact command match
+    if (this.commands[rawText]) {
+      const cmd = this.commands[rawText];
+      if (cmd === 'CLEAR') {
+        // Custom logic for CLEAR
+        while (currentCol > 0) {
+          handleKey('BACKSPACE');
+        }
+      } else {
+        handleKey(cmd);
+      }
+      return;
+    }
+
+    // 3. Fallback: Check if user said a sequence of letters "A B C"
+    // Remove spaces and check if it's all letters
+    const noSpaces = rawText.replace(/\s+/g, '');
+    // If it's a short sequence (e.g., 5 letters) and valid
+    if (noSpaces.length <= 6 && /^[a-z]+$/.test(noSpaces)) {
+      // Type them one by one
+      for (let char of noSpaces) {
+        handleKey(char.toUpperCase());
+        // Tiny delay might be needed visually, but synchronous is usually fine
+      }
+      return;
+    }
+
+    showToast(`Unknown: "${rawText}"`);
+  }
+};
+
 // --- Firebase Auth & Sync Manager ---
 const AuthManager = {
   db: null,
@@ -375,6 +526,9 @@ const rows = [];
 
   // Load only the current required words
   await loadSecureWords(currentWordLength);
+
+  // Initialize Voice
+  VoiceInputManager.init();
 
   await startGame();
 

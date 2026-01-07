@@ -618,6 +618,18 @@ h1 {
 }
 
 /* Vibrant Game States for Keys */
+.key.listening {
+  background-color: #ef4444 !important;
+  color: white !important;
+  box-shadow: 0 0 10px #ef4444 !important;
+  animation: pulse-mic 1s infinite alternate;
+}
+
+@keyframes pulse-mic {
+  from { transform: scale(1); }
+  to { transform: scale(1.1); }
+}
+
 .key.correct {
   background-color: var(--color-correct) !important;
   border-color: var(--color-correct) !important;
