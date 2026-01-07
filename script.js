@@ -208,6 +208,7 @@ const VoiceInputManager = {
     // Sanitize: remove periods, commas, extra spaces
     const cleanText = rawText.replace(/[^a-z0-9\s]/g, '').trim();
     console.log(`Processing clean voice input: "${cleanText}"`);
+    showToast(`Heard: "${cleanText}"`); // Debug feedback
 
     // 1. Direct letter match (single char)
     if (cleanText.length === 1 && /[a-z]/.test(cleanText)) {
@@ -216,11 +217,10 @@ const VoiceInputManager = {
     }
 
     // 2. Command or Dictionary match
-    // Check exact command match
     if (this.commands[cleanText]) {
       const cmd = this.commands[cleanText];
+      showToast(`Action: ${cmd}`); // Debug feedback
       if (cmd === 'CLEAR') {
-        // Custom logic for CLEAR
         while (currentCol > 0) {
           handleKey('BACKSPACE');
         }
@@ -231,19 +231,15 @@ const VoiceInputManager = {
     }
 
     // 3. Fallback: Check if user said a sequence of letters "A B C"
-    // Remove spaces and check if it's all letters
     const noSpaces = cleanText.replace(/\s+/g, '');
-    // If it's a short sequence (e.g., 5 letters) and valid
     if (noSpaces.length <= 6 && /^[a-z]+$/.test(noSpaces)) {
-      // Type them one by one
       for (let char of noSpaces) {
         handleKey(char.toUpperCase());
-        // Tiny delay might be needed visually, but synchronous is usually fine
       }
       return;
     }
 
-    showToast(`Unknown: "${cleanText}"`);
+    showToast(`Ignored: "${cleanText}"`);
   }
 };
 
@@ -1283,16 +1279,23 @@ function updateKeyboard(letter, state) {
   }
 }
 
-function onKey(e) {
-  const key = e.key.toUpperCase();
+function handleKey(key) {
+  key = key.toUpperCase();
   if (gameStatus !== 'IN_PROGRESS' || currentRow >= 6) return;
-  if (key === 'ENTER') return checkGuess();
-  if (key === 'BACKSPACE') return deleteLetter();
-  if (/^[A-Z]$/.test(key) && currentCol < currentWordLength) {
+
+  if (key === 'ENTER') {
+    checkGuess();
+  } else if (key === 'BACKSPACE') {
+    deleteLetter();
+  } else if (/^[A-Z]$/.test(key) && currentCol < currentWordLength) {
     HapticEngine.vibrate(20);
     SoundEngine.playThump();
     addLetter(key);
   }
+}
+
+function onKey(e) {
+  handleKey(e.key);
 }
 
 function addLetter(letter) {
