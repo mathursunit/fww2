@@ -164,7 +164,6 @@ const SoundEngine = {
     osc.connect(gain);
     gain.connect(this.ambienceGain);
     osc.start();
-    osc.start();
     this.tensionNode = osc;
   },
 
