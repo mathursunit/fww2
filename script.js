@@ -205,16 +205,20 @@ const VoiceInputManager = {
   },
 
   processCommand(rawText) {
+    // Sanitize: remove periods, commas, extra spaces
+    const cleanText = rawText.replace(/[^a-z0-9\s]/g, '').trim();
+    console.log(`Processing clean voice input: "${cleanText}"`);
+
     // 1. Direct letter match (single char)
-    if (rawText.length === 1 && /[a-z]/.test(rawText)) {
-      handleKey(rawText.toUpperCase());
+    if (cleanText.length === 1 && /[a-z]/.test(cleanText)) {
+      handleKey(cleanText.toUpperCase());
       return;
     }
 
     // 2. Command or Dictionary match
     // Check exact command match
-    if (this.commands[rawText]) {
-      const cmd = this.commands[rawText];
+    if (this.commands[cleanText]) {
+      const cmd = this.commands[cleanText];
       if (cmd === 'CLEAR') {
         // Custom logic for CLEAR
         while (currentCol > 0) {
@@ -228,7 +232,7 @@ const VoiceInputManager = {
 
     // 3. Fallback: Check if user said a sequence of letters "A B C"
     // Remove spaces and check if it's all letters
-    const noSpaces = rawText.replace(/\s+/g, '');
+    const noSpaces = cleanText.replace(/\s+/g, '');
     // If it's a short sequence (e.g., 5 letters) and valid
     if (noSpaces.length <= 6 && /^[a-z]+$/.test(noSpaces)) {
       // Type them one by one
@@ -239,7 +243,7 @@ const VoiceInputManager = {
       return;
     }
 
-    showToast(`Unknown: "${rawText}"`);
+    showToast(`Unknown: "${cleanText}"`);
   }
 };
 
